@@ -1,0 +1,78 @@
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f6f6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu-container {
+            max-width: 500px;
+            background: #fff;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .menu-container .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+
+        .menu-container h1 {
+            font-size: 22px;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .menu-container input[type="text"],
+        .menu-container input[type="email"],
+        .menu-container input[type="password"],
+        .menu-container select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .menu-container label {
+            font-weight: bold;
+            display: block;
+            text-align: left;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .municipios-list {
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+
+        .municipios-list input {
+            margin-right: 5px;
+        }
+
+        .menu-container button {
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .menu-container button:hover {
+            background-color: #444;
+        }
