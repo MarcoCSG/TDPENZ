@@ -1,22 +1,25 @@
 <?php
 session_start();
-include 'db.php';
+include 'includes/db.php';
 
-if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['municipio_id'])) {
+// Verificar que el usuario, municipio y año estén en sesión
+if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
     header("Location: index.php");
     exit;
 }
 
 $municipio_id = $_SESSION['municipio_id'];
+$anio = $_SESSION['anio'];
 
-// Obtener las obras del municipio
-$stmt = $conn->prepare("SELECT id, nombre FROM obras WHERE municipio_id = ?");
-$stmt->execute([$municipio_id]);
+// Obtener las obras filtradas por municipio y año
+$stmt = $conn->prepare("SELECT id, nombre FROM obras WHERE municipio_id = ? AND anio = ?");
+$stmt->execute([$municipio_id, $anio]);
 $obras = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <title>Supervisión de Obras</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -25,7 +28,7 @@ $obras = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <h2>Selecciona una obra</h2>
 
         <form action="ver_supervision.php" method="POST">
-            <label for="obra_id">Obra registrada en este municipio:</label>
+            <label for="obra_id">Obras registradas en este municipio en <?= htmlspecialchars($anio) ?>:</label>
             <select name="obra_id" id="obra_id" required>
                 <option value="">-- Selecciona una obra --</option>
                 <?php foreach ($obras as $obra): ?>

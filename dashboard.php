@@ -1,9 +1,17 @@
 <?php
 session_start();
-include 'db.php';
+include 'includes/db.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
+    exit;
+}
+
+// Procesar formulario si se envió
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $_SESSION['municipio_id'] = $_POST['municipio_id'];
+    $_SESSION['anio'] = $_POST['anio'];
+    header("Location: menu.php"); // Redirige con GET
     exit;
 }
 
@@ -23,6 +31,7 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
 <html>
 <head>
     <title>Seleccionar municipio</title>
+        <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -30,7 +39,7 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
         <img src="assets/img/logo.png" class="logo" alt="Logo empresa">
         <h2>Selecciona un municipio y año</h2>
 
-        <form action="menu.php" method="POST">
+        <form action="dashboard.php" method="POST">
             <label for="municipio">Municipio:</label>
             <select name="municipio_id" id="municipio" required>
                 <?php foreach ($municipios as $m): ?>

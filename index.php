@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Login</title>
+    <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="login">
@@ -14,7 +15,7 @@
             <div class="error-message">Usuario o contraseña incorrectos.</div>
         <?php endif; ?>
 
-        <form action="auth.php" method="POST">
+        <form action="includes/auth.php" method="POST">
             <input type="email" name="correo" placeholder="Correo" required>
             <input type="password" name="password" placeholder="Contraseña" required>
             <button type="submit">Iniciar sesión</button>

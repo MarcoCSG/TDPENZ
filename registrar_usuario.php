@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db.php';
+include 'includes/db.php';
 
 // Solo administradores pueden acceder
 if (!isset($_SESSION['usuario_id']) || $_SESSION['rol'] != 'admin') {

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db.php';
+include 'includes/db.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['rol'] != 'admin') {
     header("Location: index.php");
