@@ -2,12 +2,22 @@
 session_start();
 include 'includes/db.php';
 
-// Solo administradores pueden acceder
-if (!isset($_SESSION['usuario_id']) || $_SESSION['rol'] != 'admin') {
+// Verificar si usuario está logueado y es administrador
+if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit;
 }
 
+// Obtener el tipo de usuario desde la base de datos
+$stmt = $conn->prepare("SELECT tipo_usuario_id FROM usuarios WHERE id = ?");
+$stmt->execute([$_SESSION['usuario_id']]);
+$tipo_usuario_id = $stmt->fetchColumn();
+
+// Solo permitir acceso si es administrador (tipo_usuario_id = 1)
+if ($tipo_usuario_id != 1) {
+    header("Location: index.php");
+    exit;
+}
 // Obtener municipios
 $stmt = $conn->prepare("SELECT id, nombre FROM municipios ORDER BY nombre");
 $stmt->execute();

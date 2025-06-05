@@ -27,7 +27,7 @@ $obras = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="form-container">
         <h2>Selecciona una obra</h2>
 
-        <form action="ver_supervision.php" method="POST">
+        <form action="dashboard_obra.php" method="POST">
             <label for="obra_id">Obras registradas en este municipio en <?= htmlspecialchars($anio) ?>:</label>
             <select name="obra_id" id="obra_id" required>
                 <option value="">-- Selecciona una obra --</option>
