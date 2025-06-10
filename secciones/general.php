@@ -136,12 +136,23 @@ $periodos = $stmtPer->fetchAll(PDO::FETCH_ASSOC);
                 <div class="label">Liq. Pagar:</div>
                 <div class="value">$<?= number_format($est['liquidacion_pagar'], 2) ?></div>
 
+                <!-- Botón para generar PDF -->
+                <div class="label">PDF:</div>
+                <div class="value">
+                    <form action="secciones/generar_estimacion_pdf.php" method="get" target="_blank">
+                        <input type="hidden" name="id" value="<?= htmlspecialchars($obra['id']) ?>">
+                        <input type="hidden" name="id_estimacion" value="<?= htmlspecialchars($est['id']) ?>">
+                        <button type="submit" class="btn-pdf">📑 Generar PDF</button>
+                    </form>
+                </div>
+
                 <hr style="grid-column: 1 / -1; margin: 1rem 0;">
             <?php endforeach; ?>
         </div>
     <?php else: ?>
         <p>No hay estimaciones registradas.</p>
     <?php endif; ?>
+
 
     <h2 class="section-title">Periodos de Supervisión</h2>
     <?php if (count($periodos) > 0): ?>
@@ -161,11 +172,17 @@ $periodos = $stmtPer->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
         <p>No hay periodos de supervisión registrados.</p>
     <?php endif; ?>
+    <h2 class="section-title">Datos del Supervisor</h2>
+    <div class="data-grid">
+        <div class="label">Nombre:</div>
+        <div class="value"><?= htmlspecialchars($obra['nombre_supervisor']) ?>
+        </div>
 
 
-    <div class="button-group">
-        <a href="editar_obra.php?id=<?= $obra['id'] ?>" class="btn btn-primary">Editar</a>
-        <a href="supervision_obras.php" class="btn btn-outline">Volver al listado</a>
-        <a href="generar_pdf_obra.php?id=<?= $obra['id'] ?>" class="btn btn-danger" target="_blank">Descargar PDF</a>
+
+        <div class="button-group">
+            <!-- <a href="editar_obra.php?id=<?= $obra['id'] ?>" class="btn btn-primary">Editar</a> -->
+            <!-- <a href="supervision_obras.php" class="btn btn-outline">Volver al listado</a> -->
+            <a href="secciones/generar_pdf_obra.php?id=<?= $obra['id'] ?>" class="btn btn-danger" target="_blank">Descargar PDF</a>
+        </div>
     </div>
-</div>

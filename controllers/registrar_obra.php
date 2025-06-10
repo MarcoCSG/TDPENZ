@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ampliacion_plazo = $_POST['ampliacion_plazo'] ?? null;
     $reduccion_plazo = $_POST['reduccion_plazo'] ?? null;
     $diferimiento_periodo = $_POST['diferimiento_periodo'] ?? null;
+    $nombre_supervisor = $_POST['nombre_supervisor'] ?? null;
 
     if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
         die("Error: Coordenadas fuera de rango.");
@@ -44,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $conn->prepare("INSERT INTO obras (
         nombre, descripcion, fuente_financiamiento, localidad, latitud, longitud, municipio_id, anio,
         contratista, numero_contrato, porcentaje_anticipo, monto_contratado, tipo_adjudicacion, anticipo, fecha_firma, fecha_inicio_contrato, fecha_cierre,
-        ampliacion_monto, reduccion_monto, ampliacion_plazo, reduccion_plazo, diferimiento_periodo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        ampliacion_monto, reduccion_monto, ampliacion_plazo, reduccion_plazo, diferimiento_periodo, nombre_supervisor
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->execute([
         $nombre,
@@ -69,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $reduccion_monto,
         $ampliacion_plazo,
         $reduccion_plazo,
-        $diferimiento_periodo
+        $diferimiento_periodo,
+        $nombre_supervisor
     ]);
 
     $obra_id = $conn->lastInsertId();

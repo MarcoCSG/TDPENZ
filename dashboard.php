@@ -29,11 +29,13 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Seleccionar municipio</title>
-        <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
+    <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <img src="assets/img/logo.png" class="logo" alt="Logo empresa">
@@ -56,6 +58,13 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
 
             <button type="submit">Continuar</button>
         </form>
+<br>
+        <a href="alta_municipio.php" class="alta-button">
+            <img src="assets/img/supervisor.png" alt="supervision">
+            REGISTRAR NUEVO MUNICIPIO
+        </a>
+
     </div>
 </body>
+
 </html>

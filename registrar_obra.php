@@ -215,9 +215,14 @@
                     }
                 </script>
 
+                <h4>Supervisor Externo</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre_supervisor">Nombre del supervisor</label>
+                        <input type="text" id="nombre_supervisor" name="nombre_supervisor" required>
+                    </div>
 
-
-                <div class="form-group" style="margin-top: 20px;">
+                <div class="form-group" style="margin-top: 25px;">
                     <button type="submit" class="btn">Registrar Obra</button>
                 </div>
             </form>
