@@ -56,6 +56,15 @@ $stmt->execute([$estimacion_id]);
 $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Fotográfico - Estimación <?= htmlspecialchars($estimacion['numero_estimacion']) ?></title>
+    <link rel="stylesheet" href="/TDPENZ/assets/css/estimaciones.css">
+</head>
+
 <div class="reporte-container">
     <h2>REPORTE FOTOGRÁFICO (ANEXO II)</h2>
     <p><strong>REPORTE FOTOGRÁFICO DEL INFORME DE LA REVISIÓN DE ESTIMACIONES (PARTICIPACIÓN DEL SUPERVISOR EXTERNO EN LA OBRA PÚBLICA)</strong></p>
@@ -67,7 +76,8 @@ $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p><strong>DESCRIPCIÓN:</strong> <?= htmlspecialchars($obra['descripcion']) ?></p>
     <p><strong>FUENTE DE FINANCIAMIENTO:</strong> <?= htmlspecialchars($obra['fuente_financiamiento']) ?></p>
 
-    <a href="secciones/generar_pdf.php?id=<?= $estimacion_id ?>" class="pdf-btn">📄 GENERAR PDF</a>
+    <a target="_blank" href="secciones/generar_pdf.php?id_obra=<?= $obra_id ?>&id_estimacion=<?= $estimacion_id ?>" class="pdf-btn">📄 GENERAR PDF</a>
+
 
     <h3><?= htmlspecialchars($estimacion['numero_estimacion']) ?> (<?= ucfirst(strtolower($estimacion['tipo'] ?? 'NORMAL')) ?>)</h3>
 
@@ -192,170 +202,3 @@ $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 </script>
-
-<style>
-    /* Estilos existentes... */
-    .foto-item-guardada {
-        position: relative;
-        background: #f0f0f0;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-    }
-    
-    .imagen-container {
-        position: relative;
-        width: 100%;
-        height: 200px;
-        margin-bottom: 10px;
-    }
-    
-    .foto-item-guardada img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 10px;
-    }
-    
-    .acciones-imagen {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0,0,0,0.7);
-        padding: 5px;
-        display: flex;
-        justify-content: space-around;
-        border-bottom-left-radius: 10px;
-        border-bottom-right-radius: 10px;
-    }
-    
-    .btn-eliminar, .btn-reemplazar {
-        background: transparent;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 5px;
-        font-size: 12px;
-    }
-    
-    .btn-reemplazar {
-        position: relative;
-    }
-    
-    .input-reemplazar {
-        position: absolute;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        cursor: pointer;
-    }
-    
-    /* Mejoras para las vistas previas */
-    .imagen-placeholder {
-        width: 100%;
-        height: 200px;
-        background: #ddd;
-        border-radius: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-    }
-    
-    .vista-previa {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: none;
-    }
-    
-    .placeholder-img {
-        width: 60px;
-        opacity: 0.5;
-    }
-</style>
-
-<style>
-    .reporte-container {
-        max-width: 1000px;
-        margin: auto;
-        padding: 20px;
-        font-family: 'Arial', sans-serif;
-    }
-
-    h2,
-    h3 {
-        text-align: center;
-    }
-
-    .pdf-btn {
-        float: right;
-        background: #cfc04d;
-        padding: 10px 15px;
-        color: #000;
-        text-decoration: none;
-        border-radius: 10px;
-        font-weight: bold;
-    }
-
-    .galeria {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-    }
-
-    .foto-item {
-        background: #f0f0f0;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-    }
-
-    .foto-item input[type="text"] {
-        margin-top: 10px;
-        width: 100%;
-        padding: 6px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
-
-    .imagen-label {
-        display: block;
-        cursor: pointer;
-    }
-
-    .imagen-input {
-        display: none;
-    }
-
-    .imagen-placeholder {
-        width: 100%;
-        height: 160px;
-        background: #ddd;
-        border-radius: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .imagen-placeholder img {
-        width: 60px;
-        opacity: 0.5;
-    }
-
-    .btn-guardar {
-        background: #a8e5b1;
-        padding: 10px 30px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: bold;
-        display: block;
-        margin: 0 auto;
-        cursor: pointer;
-    }
-</style>

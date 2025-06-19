@@ -1,218 +1,179 @@
 <?php
-session_start();
-require_once('../includes/db.php');
 require_once('../tcpdf/tcpdf.php');
+require_once('../includes/db.php');
 
-if (!isset($_GET['id'])) {
-    die('ID de estimación no proporcionado');
+if (!isset($_GET['id_obra']) || !isset($_GET['id_estimacion'])) {
+    die('Parámetros faltantes');
 }
 
-$estimacion_id = $_GET['id'];
-$obra_id = $_SESSION['obra_id'];
-$municipio_id = $_SESSION['municipio_id'];
-$anio = $_SESSION['anio'];
+$id_obra = $_GET['id_obra'];
+$id_estimacion = $_GET['id_estimacion'];
 
-// Obtener datos de la obra
-$stmt = $conn->prepare("SELECT nombre, localidad, fuente_financiamiento, descripcion FROM obras WHERE id = ?");
-$stmt->execute([$obra_id]);
-$obra = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Obtener nombre del municipio
-$stmt = $conn->prepare("SELECT nombre FROM municipios WHERE id = ?");
-$stmt->execute([$municipio_id]);
-$municipio = $stmt->fetchColumn();
-
-// Obtener datos de la estimación
-$stmt = $conn->prepare("SELECT * FROM estimaciones WHERE id = ? AND obra_id = ?");
-$stmt->execute([$estimacion_id, $obra_id]);
+// Obtener estimación
+$stmt = $conn->prepare("SELECT * FROM estimaciones WHERE id = :id");
+$stmt->execute(['id' => $id_estimacion]);
 $estimacion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$estimacion) {
-    die('Estimación no encontrada');
-}
+// Obtener datos de la obra
+$stmt = $conn->prepare("SELECT o.*, m.nombre AS municipio, m.logo_ruta FROM obras o JOIN municipios m ON o.municipio_id = m.id WHERE o.id = ?");
+$stmt->execute([$id_obra]);
+$obra = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Obtener imágenes de la estimación
-$stmt = $conn->prepare("SELECT * FROM estimacion_imagenes WHERE estimacion_id = ?");
-$stmt->execute([$estimacion_id]);
+// Obtener imágenes
+$stmt = $conn->prepare("SELECT ruta, descripcion FROM estimacion_imagenes WHERE estimacion_id = :id");
+$stmt->execute(['id' => $id_estimacion]);
 $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Crear nuevo documento PDF en horizontal
-$pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+// Obtener nombre del municipio
+$municipio_id = $obra['municipio_id'];
+$stmt = $conn->prepare("SELECT nombre FROM municipios WHERE id = :id");
+$stmt->execute(['id' => $municipio_id]);
+$municipio = $stmt->fetchColumn();
 
-// Configuración del documento
-$pdf->SetCreator('Sistema de Estimaciones');
-$pdf->SetAuthor('Supervisor Externo');
-$pdf->SetTitle('Reporte Fotográfico - Anexo II');
-$pdf->SetSubject('Reporte Fotográfico');
+$tipo = ucfirst(strtolower($estimacion['tipo'] ?? 'NORMAL'));
+$numero_estimacion = htmlspecialchars($estimacion['numero_estimacion']);
 
-// Establecer márgenes
-$pdf->SetMargins(15, 15, 15);
-$pdf->SetHeaderMargin(5);
-$pdf->SetFooterMargin(10);
+// === CLASE PDF PERSONALIZADA ===
+class MYPDF extends TCPDF
+{
+    public $obra;
 
-// Añadir página
-$pdf->AddPage();
-
-// Función para verificar y corregir rutas de imágenes
-function getImagePath($ruta) {
-    // Si la ruta ya es absoluta (comienza con /)
-    if (strpos($ruta, '/') === 0) {
-        return $_SERVER['DOCUMENT_ROOT'] . $ruta;
+    public function Header()
+    {
+        $logo_path = !empty($this->obra['logo_ruta']) ? '../' . $this->obra['logo_ruta'] : '../assets/img/logo2.jpg';
+        if (file_exists($logo_path)) {
+            $this->Image($logo_path, 10, 5, 40); // Logo en la esquina superior izquierda
+        }
+        $this->SetY(15); // Espacio inferior del header
     }
-    
-    // Si es una ruta relativa
-    $base_path = $_SERVER['DOCUMENT_ROOT'] . '/TDPENZ/';
-    
-    // Verificar si la imagen existe en uploads/estimaciones/
-    if (file_exists($base_path . $ruta)) {
-        return $base_path . $ruta;
+
+    public function Footer()
+    {
+        $this->SetY(-25);
+        $this->SetFont('helvetica', '', 9);
+        // Firma del supervisor (centrada)
+        $this->Cell(0, 6, $this->obra['nombre_supervisor'], 0, 1, 'C');
+        $this->Cell(0, 6, 'Supervisor Externo', 0, 1, 'C');
+        // Número de página (derecha)
+        $this->SetFont('helvetica', 'I', 8);
+        $this->Cell(0, 6, 'Página ' . $this->getAliasNumPage() . ' de ' . $this->getAliasNbPages(), 0, 0, 'R');
     }
-    
-    // Verificar si existe en la ruta directa
-    if (file_exists($ruta)) {
-        return $ruta;
+
+    public function renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo)
+    {
+        $html = '
+        <style>
+            table.header-table { border-collapse: collapse; margin-bottom: 0; }
+            table.header-table td { vertical-align: middle; padding: 3px; }
+            .header-bg { background-color: #f4cccc; }
+        </style>
+        <table class="header-table" border="1" cellpadding="2">
+            <tr class="header-bg">
+                <td colspan="6" align="center"><b>REPORTE FOTOGRÁFICO (ANEXO II)</b></td>
+            </tr>
+            <tr class="header-bg">
+                <td colspan="6" align="center"><b>REPORTE FOTOGRÁFICO DEL INFORME DE LA REVISIÓN DE ESTIMACIONES</b></td>
+            </tr>
+            <tr class="header-bg">
+                <td colspan="6" align="center"><b>DATOS GENERALES</b></td>
+            </tr>
+            <tr>
+                <td width="20%"><b>Ente fiscalizable</b></td>
+                <td width="30%">' . htmlspecialchars($municipio) . '</td>
+                <td width="20%"><b>Fuente de financiamiento</b></td>
+                <td width="30%" colspan="3">' . nl2br(htmlspecialchars($obra['fuente_financiamiento'])) . '</td>
+            </tr>
+            <tr>
+                <td><b>Localidad</b></td>
+                <td>' . htmlspecialchars($obra['localidad']) . '</td>
+                <td><b>Número de obra</b></td>
+                <td colspan="3">' . htmlspecialchars($obra['nombre']) . '</td>
+            </tr>
+            <tr>
+                <td><b>Descripción</b></td>
+                <td colspan="5">' . htmlspecialchars($obra['descripcion']) . '</td>
+            </tr>
+            <tr class="header-bg">
+                <td colspan="6" align="center"><b>Estimación: ' . $numero_estimacion . ' (' . $tipo . ')</b></td>
+            </tr>
+        </table>';
+        $this->writeHTML($html, true, false, true, false, '');
+        $this->SetY($this->GetY() + -3); // Espacio debajo de la tabla
     }
-    
-    return false;
 }
 
-// Estilos CSS para el PDF
-$style = '
-<style>
-    .titulo {
-        font-size: 14pt;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .subtitulo {
-        font-size: 10pt;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 15px;
-    }
-    .tabla-datos {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    .tabla-datos td {
-        padding: 5px;
-        border: 1px solid #000;
-    }
-    .etiqueta {
-        font-weight: bold;
-        width: 30%;
-    }
-    .grid-imagenes {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .celda-imagen {
-        width: 33%;
-        vertical-align: top;
-        padding: 5px;
-    }
-    .imagen-contenedor {
-        text-align: center;
-        margin-bottom: 15px;
-    }
-    .descripcion {
-        font-size: 8pt;
-        text-align: center;
-        margin-top: 5px;
-        padding: 5px;
-        border: 1px solid #ddd;
-    }
-    .fuente-financiamiento {
-        font-weight: bold;
-        margin-top: 10px;
-    }
-    .estimacion {
-        font-weight: bold;
-        text-align: center;
-        margin: 15px 0;
-        font-size: 12pt;
-    }
-</style>
-';
+// === INICIAR PDF ===
+$pdf = new MYPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+$pdf->obra = $obra;
+$pdf->SetCreator('Sistema de Obras');
+$pdf->SetAuthor('Reporte Fotográfico');
+$pdf->SetTitle('Reporte Fotográfico');
+$pdf->SetMargins(10, 20, 10); // Margen superior modificado (para logo)
+$pdf->SetAutoPageBreak(true, 25); // Margen inferior modificado (para firma)
+$pdf->AddPage();
+$pdf->SetFont('helvetica', '', 10);
 
-// Contenido HTML del PDF
-$html = $style . '
-<h1 class="titulo">REPORTE FOTOGRÁFICO (ANEXO II)</h1>
-<p class="subtitulo">REPORTE FOTOGRÁFICO DEL INFORME DE LA REVISIÓN DE ESTIMACIONES<br>(PARTICIPACIÓN DEL SUPERVISOR EXTERNO EN LA OBRA PÚBLICA)</p>
+// === TABLA DE ENCABEZADO ===
+$pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo);
 
-<table class="tabla-datos">
-    <tr>
-        <td class="etiqueta">EJERCICIO FISCAL:</td>
-        <td>' . $anio . '</td>
-    </tr>
-    <tr>
-        <td class="etiqueta">ENTE FISCALIZABLE:</td>
-        <td>' . htmlspecialchars($municipio) . '</td>
-    </tr>
-    <tr>
-        <td class="etiqueta">LOCALIDAD:</td>
-        <td>' . htmlspecialchars($obra['localidad']) . '</td>
-    </tr>
-    <tr>
-        <td class="etiqueta">NÚMERO DE OBRA:</td>
-        <td>' . htmlspecialchars($obra['nombre']) . '</td>
-    </tr>
-    <tr>
-        <td class="etiqueta">DESCRIPCIÓN:</td>
-        <td>' . htmlspecialchars($obra['descripcion']) . '</td>
-    </tr>
-</table>
+// === CONFIGURACIÓN DE IMÁGENES ===
+$imageWidth = 135;
+$imageHeight = 90;
+$gap = 5; // separación horizontal entre imágenes
+$padding = 4;
+$rowHeight = $imageHeight + 10; // imagen + descripción + margen
+$currentImageIndex = 0;
 
-<p class="fuente-financiamiento">FUENTE DE FINANCIAMIENTO: ' . htmlspecialchars($obra['fuente_financiamiento']) . '</p>
+// Posición inicial
+$startY = $pdf->GetY();
 
-<p class="estimacion">ESTIMACIÓN: ' . htmlspecialchars($estimacion['numero_estimacion']) . ' (' . ucfirst(strtolower($estimacion['tipo'] ?? 'NORMAL')) . ')</p>
-';
+foreach ($imagenes as $index => $img) {
+    // Si es inicio de nueva fila (2 imágenes por fila)
+    if ($currentImageIndex % 2 == 0) {
+        $x1 = 10; // margen izquierdo
+        $x2 = $x1 + $imageWidth + $gap;
+        $rowTopY = $pdf->GetY();
 
-// Crear tabla para organizar imágenes en 3 columnas
-$html .= '<table class="grid-imagenes">';
-$count = 0;
+        // Verifica si la fila cabe en la página
+        if ($rowTopY + $rowHeight > $pdf->getPageHeight() - 25) {
+            $pdf->AddPage();
+            $pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo);
+            $rowTopY = $pdf->GetY();
+        }
 
-foreach ($imagenes as $img) {
-    if ($count % 3 == 0) {
-        $html .= '<tr>';
+        // Dibujar recuadro envolvente de la fila completa (2 imágenes)
+        $pdf->Rect($x1 - 0, $rowTopY - 2, ($imageWidth * 2) + $gap + 2, $rowHeight + 4);
     }
-    
-    $html .= '<td class="celda-imagen">';
-    $html .= '<div class="imagen-contenedor">';
-    
+
+    // Calcular posición X
+    $x = ($currentImageIndex % 2 == 0) ? $x1 : $x2;
+
+    // Dibujar imagen
     $imagePath = getImagePath($img['ruta']);
     if ($imagePath && file_exists($imagePath)) {
-        // Usar Image() para incluir la imagen correctamente
-        $pdf->Image($imagePath, '', '', 80, 60, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-        $html .= '<img src="' . $img['ruta'] . '" style="max-width:80px; max-height:60px;"><br>';
-    } else {
-        $html .= '<div style="border:1px dashed #000; width:80px; height:60px; margin:0 auto;">Imagen no encontrada</div>';
+        $pdf->Image($imagePath, $x, $rowTopY, $imageWidth, $imageHeight);
+
+        // Descripción
+        $pdf->SetXY($x, $rowTopY + $imageHeight + 2);
+        $pdf->SetFont('helvetica', '', 8);
+        $pdf->MultiCell($imageWidth, 4, $img['descripcion'], 0, 'C');
     }
-    
-    $html .= '<div class="descripcion">' . htmlspecialchars($img['descripcion']) . '</div>';
-    $html .= '</div>';
-    $html .= '</td>';
-    
-    if ($count % 3 == 2) {
-        $html .= '</tr>';
+
+    $currentImageIndex++;
+
+    // Si terminamos la fila, mover cursor a la siguiente fila
+    if ($currentImageIndex % 2 == 0) {
+        $pdf->SetY($rowTopY + $rowHeight + 8); // avanzar después del recuadro
     }
-    
-    $count++;
 }
 
-// Completar fila si es necesario
-if ($count % 3 != 0) {
-    $html .= str_repeat('<td class="celda-imagen"></td>', 3 - ($count % 3));
-    $html .= '</tr>';
+
+// === SALIDA DEL PDF ===
+$pdf->Output('reporte_fotografico.pdf', 'I');
+
+// === FUNCIÓN AUXILIAR ===
+function getImagePath($rutaRelativa)
+{
+    if (strpos($rutaRelativa, 's3.amazonaws.com') !== false) return null;
+    return '../' . $rutaRelativa;
 }
-
-$html .= '</table>';
-
-// Escribir el HTML en el PDF
-$pdf->writeHTML($html, true, false, true, false, '');
-
-// Salida del PDF
-$pdf->Output('Reporte_Fotografico_' . $estimacion_id . '.pdf', 'I');
-?>
