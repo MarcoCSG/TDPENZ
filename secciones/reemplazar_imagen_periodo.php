@@ -30,7 +30,7 @@ try {
     }
 
     // Obtener imagen existente
-    $stmt = $conn->prepare("SELECT id, ruta FROM estimacion_imagenes WHERE id = ?");
+    $stmt = $conn->prepare("SELECT id, ruta FROM periodos_imagenes WHERE id = ?");
     $stmt->execute([$id]);
     $imagenExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -42,8 +42,8 @@ try {
 
     // Configurar rutas absolutas
     $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/TDPENZ/';
-    $uploadDir = $baseDir . 'uploads/estimaciones/';
-    $rutaPublica = 'uploads/estimaciones/';
+    $uploadDir = $baseDir . 'uploads/periodos_supervision/';
+    $rutaPublica = 'uploads/periodos_supervision/';
 
     // Crear directorio si no existe
     if (!is_dir($uploadDir)) {
@@ -75,7 +75,7 @@ try {
     }
 
     // Actualizar la base de datos con la ruta pública
-    $stmt = $conn->prepare("UPDATE estimacion_imagenes SET ruta = ? WHERE id = ?");
+    $stmt = $conn->prepare("UPDATE periodos_supervision SET ruta = ? WHERE id = ?");
     if ($stmt->execute([$rutaPublicaNueva, $id])) {
         $response['success'] = true;
         $response['nuevaRuta'] = $rutaPublicaNueva;

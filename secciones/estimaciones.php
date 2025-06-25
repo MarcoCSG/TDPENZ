@@ -36,7 +36,7 @@ if (!$estimacion) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['imagenes'])) {
     foreach ($_FILES['imagenes']['tmp_name'] as $index => $tmp_name) {
         $descripcion = $_POST['descripciones'][$index] ?? '';
-        $nombre_archivo = $_FILES['imagenes']['name'][$index];
+        $nombre_archivo = uniqid() . '_' . basename($_FILES['imagenes']['name'][$index]);
         $ruta_destino = "uploads/estimaciones/" . basename($nombre_archivo);
 
         if (!is_dir("uploads/estimaciones")) {
@@ -68,7 +68,7 @@ $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="reporte-container">
     <h2>REPORTE FOTOGRÁFICO (ANEXO II)</h2>
     <p><strong>REPORTE FOTOGRÁFICO DEL INFORME DE LA REVISIÓN DE ESTIMACIONES (PARTICIPACIÓN DEL SUPERVISOR EXTERNO EN LA OBRA PÚBLICA)</strong></p>
-    <p><strong>EJERCICIO FISCAL:</strong> 2025</p>
+    <p><strong>EJERCICIO FISCAL:</strong> <?= htmlspecialchars($anio) ?></p>
     <p><strong>ENTE FISCALIZABLE:</strong> <?= htmlspecialchars($obra['municipio']) ?></p>
     <p><strong>LOCALIDAD:</strong> <?= htmlspecialchars($obra['localidad']) ?></p>
     <p><strong>No. DE OBRA:</strong> <?= htmlspecialchars($obra['nombre']) ?></p>
