@@ -142,7 +142,7 @@ $html = $style . '
         <th class="sub-title">Estimación</th>
         <th class="sub-title">Periodo</th>
         <th class="sub-title">Importe C/IVA</th>
-        <th class="sub-title">Amortización</th>
+        <th class="sub-title">Amortización de anticipo</th>
         <th class="sub-title">5 al millar</th>
         <th class="sub-title">Líquido a pagar</th>
     </tr>

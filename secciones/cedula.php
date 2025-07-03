@@ -114,22 +114,31 @@ $estimaciones = $stmtAllEst->fetchAll(PDO::FETCH_ASSOC);
                                         <th>Importe C/IVA</th>
                                         <th>Amortización</th>
                                         <th>5 al millar</th>
+                                        <th>Importe de retenciones</th>
                                         <th>Importe líquido a pagar</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><?= htmlspecialchars($estimacion_seleccionada['numero_estimacion']) ?></td>
-                                        <td>
-                                            Del <?= date('d/m/Y', strtotime($estimacion_seleccionada['fecha_del'])) ?><br>
-                                            Al <?= date('d/m/Y', strtotime($estimacion_seleccionada['fecha_al'])) ?>
-                                        </td>
-                                        <td>$<?= number_format($estimacion_seleccionada['monto_civa'], 2) ?></td>
-                                        <td>$<?= number_format($estimacion_seleccionada['amortizacion_anticipo'], 2) ?></td>
-                                        <td>$<?= number_format($estimacion_seleccionada['cinco_millar'], 2) ?></td>
-                                        <td>$<?= number_format($estimacion_seleccionada['liquidacion_pagar'], 2) ?></td>
-                                    </tr>
-                                </tbody>
+                                <?php
+                                $amortizacion = (float) $estimacion_seleccionada['amortizacion_anticipo'];
+                                $cinco_millar = (float) $estimacion_seleccionada['cinco_millar'];
+                                $monto_civa = (float) $estimacion_seleccionada['monto_civa'];
+
+                                $importe_retenciones = $amortizacion + $cinco_millar;
+                                $liquido_pagar = $monto_civa - $importe_retenciones;
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($estimacion_seleccionada['numero_estimacion']) ?></td>
+                                    <td>
+                                        Del <?= date('d/m/Y', strtotime($estimacion_seleccionada['fecha_del'])) ?><br>
+                                        Al <?= date('d/m/Y', strtotime($estimacion_seleccionada['fecha_al'])) ?>
+                                    </td>
+                                    <td>$<?= number_format($monto_civa, 2) ?></td>
+                                    <td>$<?= number_format($amortizacion, 2) ?></td>
+                                    <td>$<?= number_format($cinco_millar, 2) ?></td>
+                                    <td>$<?= number_format($importe_retenciones, 2) ?></td>
+                                    <td>$<?= number_format($liquido_pagar, 2) ?></td>
+                                </tr>
+
                             </table>
                         </div>
                     <?php else: ?>

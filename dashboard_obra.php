@@ -119,8 +119,22 @@ $seccion = $_GET['seccion'] ?? 'general';
                     </details>
                 </li>
 
-                <!-- <li><a href="?seccion=minuta" class="<?= $seccion == 'minuta' ? 'active' : '' ?>">MINUTA INFORMATIVA DE AVANCE FÍSICO Y FINANCIERO</a></li> -->
-                <li><a href="?seccion=dictamen" class="<?= $seccion == 'dictamen' ? 'active' : '' ?>">DICTAMEN DE PROCEDENCIA</a></li>
+                <!-- dictamen con submenú -->
+                <li>
+                    <details <?= $seccion == 'dictamen' ? 'open' : '' ?>>
+                        <summary class="<?= $seccion == 'dictamen' ? 'active' : '' ?>">DICTAMEN DE PROCEDENCIA</summary>
+                        <ul>
+                            <?php
+                            $stmt = $conn->prepare("SELECT id, numero_estimacion FROM estimaciones WHERE obra_id = ? ORDER BY id ASC");
+                            $stmt->execute([$obra_id]);
+                            $estimaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($estimaciones as $e) {
+                                echo "<li style='margin-left: 10px;'><a href='?seccion=dictamen&id={$e['id']}'>Estimación #" . htmlspecialchars($e['numero_estimacion']) . "</a></li>";
+                            }
+                            ?>
+                        </ul>
+                    </details>
+                </li>
 
             </ul>
         </aside>

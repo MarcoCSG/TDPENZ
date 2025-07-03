@@ -51,15 +51,15 @@ $checks = [
 ];
 
 try {
-    // Iniciar transacción
     $conn->beginTransaction();
 
-    // Verificar si ya existe una cédula para esta estimación
+    // Verificar si ya existe una cédula y obtener su ID
     $stmtCheck = $conn->prepare("SELECT id FROM cedulas_estatus WHERE obra_id = ? AND estimacion_id = ?");
     $stmtCheck->execute([$obra_id, $estimacion_id]);
-    
-    if ($stmtCheck->rowCount() > 0) {
-        // Actualizar registro existente
+    $cedulaExistente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+    if ($cedulaExistente) {
+        // Actualizar usando el ID único
         $stmt = $conn->prepare("UPDATE cedulas_estatus SET 
             estatus = :estatus,
             observaciones = :observaciones,
@@ -73,8 +73,11 @@ try {
             pruebas_laboratorios = :pruebas_laboratorios,
             creado_por = :creado_por,
             actualizado_en = NOW()
-            WHERE obra_id = :obra_id AND estimacion_id = :estimacion_id
+            WHERE id = :id
         ");
+
+        $params[':id'] = $cedulaExistente['id'];
+
     } else {
         // Insertar nuevo registro
         $stmt = $conn->prepare("INSERT INTO cedulas_estatus (
@@ -90,7 +93,7 @@ try {
         )");
     }
 
-    // Parámetros para la consulta
+    // Parámetros comunes
     $params = [
         ':obra_id' => $obra_id,
         ':estimacion_id' => $estimacion_id,
@@ -107,21 +110,34 @@ try {
         ':creado_por' => $_SESSION['usuario_id']
     ];
 
-    // Ejecutar la consulta
-    $stmt->execute($params);
+// Agregar ID solo si es una actualización
+if ($cedulaExistente) {
+    $params[':id'] = $cedulaExistente['id'];
+}
 
-   // Confirmar transacción
+// Ejecutar la consulta
+$stmt->execute($params);
+
+
     $conn->commit();
 
-    $_SESSION['success'] = "Cédula de estatus guardada correctamente";
-    header("Location: ../dashboard_obra.php?seccion=cedula&id=" . $obra_id . "&estimacion_id=" . $estimacion_id);
+    $_SESSION['success'] = "Cédula guardada correctamente.";
+header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
+
     exit;
 
+} catch (PDOException $e) {
+    $conn->rollBack();
+    $_SESSION['error'] = "Error al guardar la cédula: " . $e->getMessage();
+header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
+
+    exit;
 } catch (PDOException $e) {
     // Revertir transacción en caso de error
     $conn->rollBack();
     
     $_SESSION['error'] = "Error al guardar la cédula: " . $e->getMessage();
-    header("Location: ../dashboard_obra.php?seccion=cedula&id=" . $obra_id);
+header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
+
     exit;
 }
