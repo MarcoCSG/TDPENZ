@@ -20,6 +20,7 @@ $obra = $stmt->fetch(PDO::FETCH_ASSOC);
 $stmt = $conn->prepare("SELECT * FROM estimaciones WHERE id = ?");
 $stmt->execute([$estimacion_id]);
 $estimacion = $stmt->fetch(PDO::FETCH_ASSOC);
+
 // Obtener datos de la cédula de estatus
 $stmt = $conn->prepare("SELECT * FROM cedulas_estatus WHERE obra_id = ? AND estimacion_id = ?");
 $stmt->execute([$obra_id, $estimacion_id]);
@@ -109,8 +110,20 @@ $style = '
     .estimacion-row {
         font-size: 10pt;
     }
+    .small-col {
+        width: 14.15%;
+    }
+    .medium-col {
+        width: 15%;
+    }
 </style>
 ';
+
+// Calcular valores si no están en la cédula
+$importe_retenciones = isset($cedula['importe_retenciones']) ? $cedula['importe_retenciones'] : 
+                      ($estimacion['amortizacion_anticipo'] + $estimacion['cinco_millar']);
+$liquido_pagar = isset($cedula['liquido_pagar']) ? $cedula['liquido_pagar'] : 
+                ($estimacion['monto_civa'] - $importe_retenciones);
 
 // Contenido HTML - Estructura de tabla principal
 $html = $style . '
@@ -134,17 +147,18 @@ $html = $style . '
         <td colspan="3">' . htmlspecialchars($obra['descripcion']) . '</td>
     </tr>
     
-    <!-- Estimación - Corregido para mostrar en una sola fila -->
+    <!-- Estimación -->
     <tr>
-        <th colspan="6" class="section-title">ESTIMACIÓN</th>
+        <th colspan="7" class="section-title">ESTIMACIÓN #' . htmlspecialchars($estimacion['numero_estimacion']) . '</th>
     </tr>
     <tr>
-        <th class="sub-title">Estimación</th>
-        <th class="sub-title">Periodo</th>
-        <th class="sub-title">Importe C/IVA</th>
-        <th class="sub-title">Amortización de anticipo</th>
-        <th class="sub-title">5 al millar</th>
-        <th class="sub-title">Líquido a pagar</th>
+        <th class="sub-title small-col">Estimación</th>
+        <th class="sub-title medium-col">Periodo</th>
+        <th class="sub-title small-col">Importe C/IVA</th>
+        <th class="sub-title small-col">Amortización</th>
+        <th class="sub-title small-col">5 al millar</th>
+        <th class="sub-title small-col">Retenciones</th>
+        <th class="sub-title small-col">Líquido a pagar</th>
     </tr>
     <tr class="estimacion-row">
         <td>' . htmlspecialchars($estimacion['numero_estimacion']) . '</td>
@@ -152,57 +166,54 @@ $html = $style . '
         <td>$' . number_format($estimacion['monto_civa'], 2) . '</td>
         <td>$' . number_format($estimacion['amortizacion_anticipo'], 2) . '</td>
         <td>$' . number_format($estimacion['cinco_millar'], 2) . '</td>
-        <td>$' . number_format($estimacion['liquidacion_pagar'], 2) . '</td>
+        <td>$' . number_format($importe_retenciones, 2) . '</td>
+        <td>$' . number_format($liquido_pagar, 2) . '</td>
     </tr>
     
     <!-- Estimación y su Soporte -->
     <tr>
-        <th colspan="6" class="section-title">ESTIMACIÓN Y SU SOPORTE</th>
+        <th colspan="7" class="section-title">ESTIMACIÓN Y SU SOPORTE</th>
     </tr>
     <tr>
-<td colspan="4" class="left-col">
-    <table width="150%">
-        <tr>
-            <td class="checkmark">' . ($cedula['caratula_estimacion'] ? '✓' : '') . '</td>
-            <td>Carátula de estimación</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['resumen_partidas'] ? '✓' : '') . '</td>
-            <td>Resumen de partidas</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['estado_cuentas'] ? '✓' : '') . '</td>
-            <td>Estado de cuenta</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['estimacion_check'] ? '✓' : '') . '</td>
-            <td>Estimación</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['volumenes_obra'] ? '✓' : '') . '</td>
-            <td>Números generadores de volúmenes</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['croquis_volumenes'] ? '✓' : '') . '</td>
-            <td>Croquis de números generadores</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['reporte_fotografico'] ? '✓' : '') . '</td>
-            <td>Reporte fotográfico</td>
-        </tr>
-        <tr>
-            <td class="checkmark">' . ($cedula['pruebas_laboratorios'] ? '✓' : '') . '</td>
-            <td>Pruebas de laboratorio</td>
-        </tr>
-    </table>
+        <td colspan="4" class="left-col">
+            <table width="150%">
+                <tr>
+                    <td class="checkmark">' . ($cedula['caratula_estimacion'] ? '✓' : '') . '</td>
+                    <td>Carátula de estimación</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['resumen_partidas'] ? '✓' : '') . '</td>
+                    <td>Resumen de partidas</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['estado_cuentas'] ? '✓' : '') . '</td>
+                    <td>Estado de cuenta</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['estimacion_check'] ? '✓' : '') . '</td>
+                    <td>Estimación</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['volumenes_obra'] ? '✓' : '') . '</td>
+                    <td>Números generadores de volúmenes</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['croquis_volumenes'] ? '✓' : '') . '</td>
+                    <td>Croquis de números generadores</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['reporte_fotografico'] ? '✓' : '') . '</td>
+                    <td>Reporte fotográfico</td>
+                </tr>
+                <tr>
+                    <td class="checkmark">' . ($cedula['pruebas_laboratorios'] ? '✓' : '') . '</td>
+                    <td>Pruebas de laboratorio</td>
+                </tr>
+            </table>
             
             <div class="estatus">ESTATUS DE ESTIMACIÓN: ' . strtoupper($cedula['estatus']) . '</div>
         </td>
         <td colspan="3" class="right-col">
-            <table width="100%">
-                
-            </table>
-            
             <div class="observaciones">
                 <strong>OBSERVACIONES Y/O COMENTARIOS:</strong><br><br>
                 ' . nl2br(htmlspecialchars($cedula['observaciones'])) . '

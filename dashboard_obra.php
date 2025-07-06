@@ -16,7 +16,12 @@ if (!isset($_SESSION['obra_id'])) {
     exit;
 }
 
-$obra_id = $_SESSION['obra_id'];
+$obra_id = $_SESSION['obra_id']; // o de donde lo tomes
+
+$stmt = $conn->prepare("SELECT * FROM obras WHERE id = ?");
+$stmt->execute([$obra_id]);
+$obra = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
 // Cargar información de la obra
 $stmt = $conn->prepare("SELECT * FROM obras WHERE id = ?");

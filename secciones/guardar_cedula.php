@@ -1,26 +1,36 @@
 <?php
-session_start();
-require_once('../includes/db.php');
+// Habilitar errores para desarrollo
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Verificar autenticación y permisos
+// Manejo seguro de sesiones
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Conexión a la base de datos
+require_once __DIR__ . '/../includes/db.php';
+
+// Verificar autenticación
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: ../index.php");
+    $_SESSION['error'] = "Debe iniciar sesión para acceder a esta función";
+    header("Location: ../login.php");
     exit;
 }
 
-// Validar método de envío
+// Validar método POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error'] = "Método de solicitud no permitido";
-    header("Location: dashboard_obra.php?seccion=cedula&id=" . ($_POST['obra_id'] ?? ''));
+    header("Location: ../dashboard_obra.php");
     exit;
 }
 
-// Validar datos obligatorios
+// Validar campos requeridos
 $required_fields = ['obra_id', 'estimacion_id', 'estatus_estimacion', 'observaciones'];
 foreach ($required_fields as $field) {
-    if (!isset($_POST[$field])) {
-        $_SESSION['error'] = "Faltan datos obligatorios";
-        header("Location: dashboard_obra.php?seccion=cedula&id=" . ($_POST['obra_id'] ?? ''));
+    if (empty($_POST[$field])) {
+        $_SESSION['error'] = "Faltan datos obligatorios: $field";
+        header("Location: ../dashboard_obra.php?seccion=cedula&id=" . ($_POST['obra_id'] ?? ''));
         exit;
     }
 }
@@ -28,17 +38,36 @@ foreach ($required_fields as $field) {
 // Sanitizar y validar datos
 $obra_id = filter_input(INPUT_POST, 'obra_id', FILTER_VALIDATE_INT);
 $estimacion_id = filter_input(INPUT_POST, 'estimacion_id', FILTER_VALIDATE_INT);
-$estatus = $_POST['estatus_estimacion'];
-$observaciones = trim($_POST['observaciones']); 
+$estatus = in_array($_POST['estatus_estimacion'], ['aprobada', 'no_aprobada']) ? $_POST['estatus_estimacion'] : null;
+$observaciones = trim($_POST['observaciones']);
+$usuario_id = $_SESSION['usuario_id'];
 
-// Validar valores
-if (!$obra_id || !$estimacion_id || !in_array($estatus, ['aprobada', 'no_aprobada']) || empty($observaciones)) {
+if (!$obra_id || !$estimacion_id || !$estatus) {
     $_SESSION['error'] = "Datos no válidos";
-    header("Location: dashboard_obra.php?seccion=cedula&id=" . $obra_id);
+    header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
     exit;
 }
 
-// Recoger valores de los checkboxes (1 si marcado, 0 si no)
+// Verificar que exista la obra y estimación
+try {
+    $stmt = $conn->prepare("SELECT 1 FROM obras WHERE id = ?");
+    $stmt->execute([$obra_id]);
+    if (!$stmt->fetch()) {
+        throw new Exception("La obra no existe");
+    }
+
+    $stmt = $conn->prepare("SELECT 1 FROM estimaciones WHERE id = ? AND obra_id = ?");
+    $stmt->execute([$estimacion_id, $obra_id]);
+    if (!$stmt->fetch()) {
+        throw new Exception("La estimación no existe para esta obra");
+    }
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
+    exit;
+}
+
+// Procesar checkboxes
 $checks = [
     'caratula_estimacion' => isset($_POST['check_caratula_estimacion']) ? 1 : 0,
     'resumen_partidas' => isset($_POST['check_resumen_partidas']) ? 1 : 0,
@@ -50,94 +79,92 @@ $checks = [
     'pruebas_laboratorios' => isset($_POST['check_pruebas_laboratorios']) ? 1 : 0
 ];
 
+// Valores numéricos
+$importe_retenciones = isset($_POST['importe_retenciones']) ? (float)$_POST['importe_retenciones'] : 0;
+$liquido_pagar = isset($_POST['liquido_pagar']) ? (float)$_POST['liquido_pagar'] : 0;
+
 try {
     $conn->beginTransaction();
 
-    // Verificar si ya existe una cédula y obtener su ID
-    $stmtCheck = $conn->prepare("SELECT id FROM cedulas_estatus WHERE obra_id = ? AND estimacion_id = ?");
-    $stmtCheck->execute([$obra_id, $estimacion_id]);
-    $cedulaExistente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+    // Verificar si ya existe
+    $stmt = $conn->prepare("SELECT id FROM cedulas_estatus WHERE obra_id = ? AND estimacion_id = ?");
+    $stmt->execute([$obra_id, $estimacion_id]);
+    $cedula_existente = $stmt->fetch();
 
-    if ($cedulaExistente) {
-        // Actualizar usando el ID único
+    if ($cedula_existente) {
+        // Actualizar registro existente
         $stmt = $conn->prepare("UPDATE cedulas_estatus SET 
-            estatus = :estatus,
-            observaciones = :observaciones,
-            caratula_estimacion = :caratula_estimacion,
-            resumen_partidas = :resumen_partidas,
-            estado_cuentas = :estado_cuentas,
-            estimacion_check = :estimacion_check,
-            volumenes_obra = :volumenes_obra,
-            croquis_volumenes = :croquis_volumenes,
-            reporte_fotografico = :reporte_fotografico,
-            pruebas_laboratorios = :pruebas_laboratorios,
-            creado_por = :creado_por,
+            estatus = ?,
+            observaciones = ?,
+            caratula_estimacion = ?,
+            resumen_partidas = ?,
+            estado_cuentas = ?,
+            estimacion_check = ?,
+            volumenes_obra = ?,
+            croquis_volumenes = ?,
+            reporte_fotografico = ?,
+            pruebas_laboratorios = ?,
+            importe_retenciones = ?,
+            liquido_pagar = ?,
+            creado_por = ?,
             actualizado_en = NOW()
-            WHERE id = :id
-        ");
-
-        $params[':id'] = $cedulaExistente['id'];
-
+            WHERE id = ?");
+        
+        $params = [
+            $estatus,
+            $observaciones,
+            $checks['caratula_estimacion'],
+            $checks['resumen_partidas'],
+            $checks['estado_cuentas'],
+            $checks['estimacion_check'],
+            $checks['volumenes_obra'],
+            $checks['croquis_volumenes'],
+            $checks['reporte_fotografico'],
+            $checks['pruebas_laboratorios'],
+            $importe_retenciones,
+            $liquido_pagar,
+            $usuario_id,
+            $cedula_existente['id']
+        ];
     } else {
         // Insertar nuevo registro
         $stmt = $conn->prepare("INSERT INTO cedulas_estatus (
-            obra_id, estimacion_id, estatus, observaciones, 
+            obra_id, estimacion_id, estatus, observaciones,
             caratula_estimacion, resumen_partidas, estado_cuentas,
-            estimacion_check, volumenes_obra, croquis_volumenes, 
-            reporte_fotografico, pruebas_laboratorios, creado_por
-        ) VALUES (
-            :obra_id, :estimacion_id, :estatus, :observaciones,
-            :caratula_estimacion, :resumen_partidas, :estado_cuentas,
-            :estimacion_check, :volumenes_obra, :croquis_volumenes,
-            :reporte_fotografico, :pruebas_laboratorios, :creado_por
-        )");
+            estimacion_check, volumenes_obra, croquis_volumenes,
+            reporte_fotografico, pruebas_laboratorios,
+            importe_retenciones, liquido_pagar, creado_por
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $params = [
+            $obra_id,
+            $estimacion_id,
+            $estatus,
+            $observaciones,
+            $checks['caratula_estimacion'],
+            $checks['resumen_partidas'],
+            $checks['estado_cuentas'],
+            $checks['estimacion_check'],
+            $checks['volumenes_obra'],
+            $checks['croquis_volumenes'],
+            $checks['reporte_fotografico'],
+            $checks['pruebas_laboratorios'],
+            $importe_retenciones,
+            $liquido_pagar,
+            $usuario_id
+        ];
     }
 
-    // Parámetros comunes
-    $params = [
-        ':obra_id' => $obra_id,
-        ':estimacion_id' => $estimacion_id,
-        ':estatus' => $estatus,
-        ':observaciones' => $observaciones,
-        ':caratula_estimacion' => $checks['caratula_estimacion'],
-        ':resumen_partidas' => $checks['resumen_partidas'],
-        ':estado_cuentas' => $checks['estado_cuentas'],
-        ':estimacion_check' => $checks['estimacion_check'],
-        ':volumenes_obra' => $checks['volumenes_obra'],
-        ':croquis_volumenes' => $checks['croquis_volumenes'],
-        ':reporte_fotografico' => $checks['reporte_fotografico'],
-        ':pruebas_laboratorios' => $checks['pruebas_laboratorios'],
-        ':creado_por' => $_SESSION['usuario_id']
-    ];
-
-// Agregar ID solo si es una actualización
-if ($cedulaExistente) {
-    $params[':id'] = $cedulaExistente['id'];
-}
-
-// Ejecutar la consulta
-$stmt->execute($params);
-
-
+    $stmt->execute($params);
     $conn->commit();
 
-    $_SESSION['success'] = "Cédula guardada correctamente.";
-header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
-
+    $_SESSION['success'] = "Cédula guardada correctamente";
+    header("Location: ../dashboard_obra.php?seccion=minuta&id=$obra_id&estimacion_id=$estimacion_id");
     exit;
 
 } catch (PDOException $e) {
     $conn->rollBack();
-    $_SESSION['error'] = "Error al guardar la cédula: " . $e->getMessage();
-header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
-
-    exit;
-} catch (PDOException $e) {
-    // Revertir transacción en caso de error
-    $conn->rollBack();
-    
-    $_SESSION['error'] = "Error al guardar la cédula: " . $e->getMessage();
-header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
-
+    $_SESSION['error'] = "Error al guardar: " . $e->getMessage();
+    header("Location: ../dashboard_obra.php?seccion=cedula&id=$obra_id");
     exit;
 }

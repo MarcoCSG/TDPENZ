@@ -56,7 +56,8 @@ $obra['municipio'] = $municipio;
 <head>
     <meta charset="UTF-8">
     <title>Dictamen de Procedencia</title>
-    <link rel="stylesheet" href="estilos/apple.css">
+    <link rel="stylesheet" href="assets/css/dictamen.css">
+
 </head>
 <body>
     <div class="container">
