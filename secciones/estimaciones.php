@@ -88,7 +88,7 @@ $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <label class="imagen-label">
                         <input type="file" name="imagenes[]" accept="image/*" class="imagen-input" onchange="mostrarVistaPrevia(this)" />
                         <div class="imagen-placeholder">
-                            <img src="/TDPENZ/assets/img/subir-foto.png" alt="Subir foto" class="placeholder-img">
+                            <img src="assets/img/subir-foto.png" alt="Subir foto" class="placeholder-img">
                             <img src="#" alt="Vista previa" class="vista-previa" style="display: none;">
                         </div>
                     </label>

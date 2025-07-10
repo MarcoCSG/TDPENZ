@@ -41,7 +41,7 @@ try {
     }
 
     // Configurar rutas absolutas
-    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/TDPENZ/';
+    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '';
     $uploadDir = $baseDir . 'uploads/periodos_supervision/';
     $rutaPublica = 'uploads/periodos_supervision/';
 

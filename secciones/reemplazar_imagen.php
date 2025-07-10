@@ -41,7 +41,7 @@ try {
     }
 
     // Configurar rutas absolutas
-    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/TDPENZ/';
+    $baseDir = $_SERVER['DOCUMENT_ROOT'] . '';
     $uploadDir = $baseDir . 'uploads/estimaciones/';
     $rutaPublica = 'uploads/estimaciones/';
 
