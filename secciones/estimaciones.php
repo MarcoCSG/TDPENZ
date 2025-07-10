@@ -62,7 +62,7 @@ $imagenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte Fotográfico - Estimación <?= htmlspecialchars($estimacion['numero_estimacion']) ?></title>
-    <link rel="stylesheet" href="/TDPENZ/assets/css/estimaciones.css">
+    <link rel="stylesheet" href="assets/css/estimaciones.css">
 </head>
 
 <div class="reporte-container">
