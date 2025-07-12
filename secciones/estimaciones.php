@@ -1,6 +1,16 @@
 <?php
+// El autoloader debe ir PRIMERO
+require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../config/aws.php';
+
+
+// Obtener instancia configurada de S3
+$s3 = getS3Client();
+$bucket = getS3Bucket();
+
 if (!isset($_GET['id'])) {
-    echo "<p>Selecciona una estimación desde el menú.</p>";
+    echo "<p>Selecciona un periodo de supervisión desde el menú.</p>";
     return;
 }
 
@@ -32,23 +42,39 @@ if (!$estimacion) {
     return;
 }
 
-// Procesar subida de imagen
+// === PROCESAR SUBIDA A S3 ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['imagenes'])) {
     foreach ($_FILES['imagenes']['tmp_name'] as $index => $tmp_name) {
-        $descripcion = $_POST['descripciones'][$index] ?? '';
-        $nombre_archivo = uniqid() . '_' . basename($_FILES['imagenes']['name'][$index]);
-        $ruta_destino = "uploads/estimaciones/" . basename($nombre_archivo);
-
-        if (!is_dir("uploads/estimaciones")) {
-            mkdir("uploads/estimaciones", 0777, true);
+        if ($_FILES['imagenes']['error'][$index] !== UPLOAD_ERR_OK) {
+            continue;
         }
 
-        if (move_uploaded_file($tmp_name, $ruta_destino)) {
+        $descripcion = $_POST['descripciones'][$index] ?? '';
+        $nombre_archivo = uniqid() . '_' . basename($_FILES['imagenes']['name'][$index]);
+        $ruta_s3 = "estimaciones/" . $nombre_archivo;
+
+        try {
+            $result = $s3->putObject([
+                'Bucket' => $bucket,
+                'Key' => $ruta_s3,
+                'SourceFile' => $tmp_name,
+                'ContentType' => mime_content_type($tmp_name)
+            ]);
+
+            // ✅ URL accesible directamente
+            $url_imagen = $result['ObjectURL'];
+
+            // Guarda la URL en la base de datos
             $stmt = $conn->prepare("INSERT INTO estimacion_imagenes (estimacion_id, ruta, descripcion) VALUES (?, ?, ?)");
-            $stmt->execute([$estimacion_id, $ruta_destino, $descripcion]);
+            $stmt->execute([$estimacion_id, $url_imagen, $descripcion]);
+
+        } catch (\Aws\Exception\AwsException $e) {
+            error_log("Error detallado S3: " . $e->getAwsErrorMessage());
+            echo "<script>alert('Error al subir: " . addslashes($e->getAwsErrorMessage()) . "');</script>";
         }
     }
 }
+
 
 // Obtener imágenes cargadas
 $stmt = $conn->prepare("SELECT * FROM estimacion_imagenes WHERE estimacion_id = ?");

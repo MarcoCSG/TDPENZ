@@ -1,6 +1,8 @@
 <?php
 require_once('../tcpdf/tcpdf.php');
 require_once('../includes/db.php');
+require_once('../config/aws.php'); // Asegúrate de tener configurado getS3Client() y getS3Bucket()
+use Aws\Exception\AwsException;
 
 if (!isset($_GET['id_obra']) || !isset($_GET['id_estimacion'])) {
     die('Parámetros faltantes');
@@ -134,10 +136,9 @@ foreach ($imagenes as $index => $img) {
         $x2 = $x1 + $imageWidth + $gap;
         $rowTopY = $pdf->GetY();
 
-        // Verifica si la fila cabe en la página
         if ($rowTopY + $rowHeight > $pdf->getPageHeight() - 25) {
             $pdf->AddPage();
-            $pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo);
+            $pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo); 
             $rowTopY = $pdf->GetY();
         }
 
@@ -149,15 +150,19 @@ foreach ($imagenes as $index => $img) {
     $x = ($currentImageIndex % 2 == 0) ? $x1 : $x2;
 
     // Dibujar imagen
-    $imagePath = getImagePath($img['ruta']);
-    if ($imagePath && file_exists($imagePath)) {
-        $pdf->Image($imagePath, $x, $rowTopY, $imageWidth, $imageHeight);
+    $imageTempPath = downloadImageFromS3($img['ruta']);
+    if ($imageTempPath && file_exists($imageTempPath)) {
+        $pdf->Image($imageTempPath, $x, $rowTopY, $imageWidth, $imageHeight);
 
         // Descripción
         $pdf->SetXY($x, $rowTopY + $imageHeight + 2);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->MultiCell($imageWidth, 4, $img['descripcion'], 0, 'C');
+
+        // Eliminar imagen temporal
+        unlink($imageTempPath);
     }
+
 
     $currentImageIndex++;
 
@@ -169,11 +174,34 @@ foreach ($imagenes as $index => $img) {
 
 
 // === SALIDA DEL PDF ===
-$pdf->Output('reporte_fotografico.pdf', 'I');
+$pdf->Output('reporte_estimaciones.pdf', 'I');
 
 // === FUNCIÓN AUXILIAR ===
-function getImagePath($rutaRelativa)
+function downloadImageFromS3($url)
 {
-    if (strpos($rutaRelativa, 's3.amazonaws.com') !== false) return null;
-    return '../' . $rutaRelativa;
+    // Extraer solo la ruta relativa del archivo
+    $parsed = parse_url($url);
+    if (!isset($parsed['path'])) return false;
+
+    // Eliminar el primer slash "/"
+    $key = ltrim($parsed['path'], '/'); // esto da: "estimaciones/archivo.jpg"
+
+    $s3 = getS3Client();
+    $bucket = getS3Bucket();
+
+    try {
+        $result = $s3->getObject([
+            'Bucket' => $bucket,
+            'Key'    => $key
+        ]);
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'img_');
+        file_put_contents($tempFile, $result['Body']);
+
+        return $tempFile;
+    } catch (AwsException $e) {
+        error_log("❌ Error descargando imagen desde S3: " . $e->getAwsErrorMessage());
+        return false;
+    }
 }
+

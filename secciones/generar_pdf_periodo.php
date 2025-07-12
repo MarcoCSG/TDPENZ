@@ -1,6 +1,9 @@
 <?php
 require_once('../tcpdf/tcpdf.php');
 require_once('../includes/db.php');
+require_once('../config/aws.php'); // Asegúrate de tener configurado getS3Client() y getS3Bucket()
+use Aws\Exception\AwsException;
+
 
 if (!isset($_GET['id_obra']) || !isset($_GET['id_periodo'])) {
     die('Parámetros faltantes');
@@ -60,7 +63,7 @@ class MYPDF extends TCPDF
     {
         $fecha_inicio = date('d/m/Y', strtotime($periodo['fecha_inicio']));
         $fecha_fin = date('d/m/Y', strtotime($periodo['fecha_fin']));
-        
+
         $html = '
         <style>
             table.header-table { border-collapse: collapse; margin-bottom: 0; }
@@ -155,15 +158,19 @@ foreach ($imagenes as $index => $img) {
     $x = ($currentImageIndex % 2 == 0) ? $x1 : $x2;
 
     // Dibujar imagen
-    $imagePath = getImagePath($img['ruta']);
-    if ($imagePath && file_exists($imagePath)) {
-        $pdf->Image($imagePath, $x, $rowTopY, $imageWidth, $imageHeight);
+    $imageTempPath = downloadImageFromS3($img['ruta']);
+    if ($imageTempPath && file_exists($imageTempPath)) {
+        $pdf->Image($imageTempPath, $x, $rowTopY, $imageWidth, $imageHeight);
 
         // Descripción
         $pdf->SetXY($x, $rowTopY + $imageHeight + 2);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->MultiCell($imageWidth, 4, $img['descripcion'], 0, 'C');
+
+        // Eliminar imagen temporal
+        unlink($imageTempPath);
     }
+
 
     $currentImageIndex++;
 
@@ -177,8 +184,26 @@ foreach ($imagenes as $index => $img) {
 $pdf->Output('reporte_supervision.pdf', 'I');
 
 // === FUNCIÓN AUXILIAR ===
-function getImagePath($rutaRelativa)
-{
-    if (strpos($rutaRelativa, 's3.amazonaws.com') !== false) return null;
-    return '../' . $rutaRelativa;
-}
+    function downloadImageFromS3($url)
+    {
+        $parsed = parse_url($url);
+        if (!isset($parsed['path'])) return false;
+
+        $key = ltrim($parsed['path'], '/');
+        $s3 = getS3Client();
+        $bucket = getS3Bucket();
+
+        try {
+            $result = $s3->getObject([
+                'Bucket' => $bucket,
+                'Key'    => $key
+            ]);
+
+            $tempFile = tempnam(sys_get_temp_dir(), 'img_');
+            file_put_contents($tempFile, $result['Body']);
+            return $tempFile;
+        } catch (AwsException $e) {
+            error_log("Error descargando imagen desde S3: " . $e->getAwsErrorMessage());
+            return false;
+        }
+    }
