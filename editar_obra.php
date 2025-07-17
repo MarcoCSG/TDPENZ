@@ -33,9 +33,20 @@ $stmt = $conn->prepare("SELECT * FROM periodos_supervision WHERE obra_id = ?");
 $stmt->execute([$id]);
 $periodos = $stmt->fetchAll();
 
+// Obtener estimaciones
+$stmt = $conn->prepare("SELECT * FROM estimaciones WHERE obra_id = ?");
+$stmt->execute([$id]);
+$estimaciones = $stmt->fetchAll();
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $stmt = $conn->prepare("UPDATE obras SET nombre=?, descripcion=?, fuente_financiamiento=?, localidad=?, latitud=?, longitud=? WHERE id=?");
+    $stmt = $conn->prepare("UPDATE obras SET nombre=?, descripcion=?, fuente_financiamiento=?, localidad=?, latitud=?, longitud=?, 
+    contratista=?, numero_contrato=?, porcentaje_anticipo=?, monto_contratado=?, tipo_adjudicacion=?, anticipo=?, 
+    fecha_firma=?, fecha_inicio_contrato=?, fecha_cierre=?, 
+    ampliacion_monto=?, reduccion_monto=?, ampliacion_plazo=?, reduccion_plazo=?, diferimiento_periodo=?, 
+    nombre_supervisor=?
+    WHERE id=?");
+
     $stmt->execute([
         $_POST['nombre'],
         $_POST['descripcion'],
@@ -43,6 +54,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_POST['localidad'],
         $_POST['latitud'],
         $_POST['longitud'],
+        $_POST['contratista'],
+        $_POST['numero_contrato'],
+        $_POST['porcentaje_anticipo'],
+        $_POST['monto_contratado'],
+        $_POST['tipo_adjudicacion'],
+        $_POST['anticipo'],
+        $_POST['fecha_firma'],
+        $_POST['fecha_inicio_contrato'],
+        $_POST['fecha_cierre'],
+        $_POST['ampliacion_monto'],
+        $_POST['reduccion_monto'],
+        $_POST['ampliacion_plazo'],
+        $_POST['reduccion_plazo'],
+        $_POST['diferimiento_periodo'],
+        $_POST['nombre_supervisor'],
         $id
     ]);
 
@@ -72,6 +98,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
+    // Procesar estimaciones
+    if (isset($_POST['estimacion_numero'])) {
+        foreach ($_POST['estimacion_numero'] as $i => $numero) {
+            $estimacion_id = $_POST['estimacion_id'][$i] ?? null;
+
+            $del = $_POST['estimacion_del'][$i];
+            $al = $_POST['estimacion_al'][$i];
+            $monto = $_POST['estimacion_monto'][$i];
+            $cinco = $_POST['estimacion_cinco_millar'][$i];
+            $amort = $_POST['estimacion_amortizacion_anticipo'][$i];
+            $liq = $_POST['estimacion_liquidacion_pagar'][$i];
+
+            if ($estimacion_id != '') {
+                // Actualizar estimación existente
+                $conn->prepare("UPDATE estimaciones SET numero_estimacion=?, fecha_del=?, fecha_al=?, monto_civa=?, cinco_millar=?, amortizacion_anticipo=?, liquidacion_pagar=? WHERE id=?")
+                    ->execute([$numero, $del, $al, $monto, $cinco, $amort, $liq, $estimacion_id]);
+            } elseif ($numero && $del && $al && $monto) {
+                // Insertar nueva estimación
+                $conn->prepare("INSERT INTO estimaciones (obra_id, numero_estimacion, fecha_del, fecha_al, monto_civa, cinco_millar, amortizacion_anticipo, liquidacion_pagar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                    ->execute([$id, $numero, $del, $al, $monto, $cinco, $amort, $liq]);
+            }
+        }
+    }
+
+    // Eliminar estimaciones
+    if (isset($_POST['eliminar_estimacion'])) {
+        foreach ($_POST['eliminar_estimacion'] as $eid) {
+            $conn->prepare("DELETE FROM estimaciones WHERE id = ?")->execute([$eid]);
+        }
+    }
+
+
     header("Location: editar_obra.php?id=$id&editado=ok");
 
     exit;
@@ -85,156 +143,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Obra</title>
-    <style>
-        :root {
-            --color-primary: #2b6cb0;
-            --color-secondary: #4299e1;
-            --color-light: #f8fafc;
-            --color-text: #2d3748;
-            --color-border: #e2e8f0;
-            --color-success: #38a169;
-            --color-error: #e53e3e;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #f5f7fa;
-            margin: 0;
-            padding: 20px;
-            color: var(--color-text);
-            line-height: 1.5;
-        }
-
-        .main-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-        }
-
-        .app-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .app-logo {
-            max-height: 50px;
-            width: auto;
-            margin-bottom: 10px;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            color: var(--color-primary);
-            margin-bottom: 5px;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 25px;
-            color: var(--color-secondary);
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .form-container {
-            margin-top: 20px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-text);
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--color-border);
-            border-radius: 4px;
-            font-size: 0.875rem;
-            transition: border 0.2s;
-        }
-
-        input:focus,
-        textarea:focus {
-            border-color: var(--color-secondary);
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
-        }
-
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            background-color: var(--color-secondary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            margin-top: 10px;
-        }
-
-        .btn:hover {
-            background-color: var(--color-primary);
-            transform: translateY(-1px);
-        }
-
-        .coord-group {
-            display: flex;
-            gap: 15px;
-        }
-
-        .coord-group .form-group {
-            flex: 1;
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 20px;
-            }
-
-            .coord-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/editar_obra.css">
 </head>
 
 <body>
     <div class="main-container">
         <header class="app-header">
-            <img src="assets/img/logo.png" class="app-logo" alt="Logo empresa">
+            <a href="menu.php">
+                <img src="assets/img/logo.png" class="app-logo" alt="Logo empresa">
+            </a>
             <h1 class="page-title">Editar Obra</h1>
         </header>
+
 
         <a href="registrar_obra.php" class="back-link">← Volver al listado de obras</a>
 
@@ -302,9 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                         </div>
                     <?php endforeach; ?>
-
                 </div>
-
                 <!-- Template para agregar nuevos -->
                 <button type="button" onclick="agregarPeriodo()" class="btn">+ Agregar periodo</button>
                 <script>
@@ -331,11 +249,156 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                 </script>
 
+                <h3>Estimaciones</h3>
+                <div class="table-container">
+                    <table id="tabla_estimaciones" class="estimaciones-table">
+                        <thead>
+                            <tr>
+                                <th>NÚMERO</th>
+                                <th>DEL</th>
+                                <th>AL</th>
+                                <th>MONTO C/IVA</th>
+                                <th>5 AL MILLAR</th>
+                                <th>AMORT. ANT.</th>
+                                <th>LIQ. PAGAR</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estimaciones_body">
+                            <?php foreach ($estimaciones as $e): ?>
+                                <tr>
+                                    <input type="hidden" name="estimacion_id[]" value="<?= $e['id'] ?>">
+                                    <td><input type="text" name="estimacion_numero[]" value="<?= $e['numero_estimacion'] ?>"></td>
+                                    <td><input type="date" name="estimacion_del[]" value="<?= $e['fecha_del'] ?>"></td>
+                                    <td><input type="date" name="estimacion_al[]" value="<?= $e['fecha_al'] ?>"></td>
+                                    <td><input type="number" step="0.01" name="estimacion_monto[]" value="<?= htmlspecialchars($e['monto_civa']) ?>" oninput="calcularEstimacion(this)"></td>
+                                    <td><input type="text" name="estimacion_cinco_millar[]" value="<?= $e['cinco_millar'] ?>" readonly></td>
+                                    <td><input type="text" name="estimacion_amortizacion_anticipo[]" value="<?= $e['amortizacion_anticipo'] ?>" readonly></td>
+                                    <td><input type="text" name="estimacion_liquidacion_pagar[]" value="<?= $e['liquidacion_pagar'] ?>" readonly></td>
+                                    <td><input type="checkbox" name="eliminar_estimacion[]" value="<?= $e['id'] ?>"></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" class="btn" onclick="agregarFilaEstimacion()">+ Agregar Estimación</button>
+
+
+                <h3>Datos de contratación de la obra</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Contratista</label>
+                        <input type="text" name="contratista" value="<?= htmlspecialchars($obra['contratista']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Número de contrato</label>
+                        <input type="text" name="numero_contrato" value="<?= htmlspecialchars($obra['numero_contrato']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>% de anticipo</label>
+                        <input type="number" step="any" name="porcentaje_anticipo" value="<?= htmlspecialchars($obra['porcentaje_anticipo']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto contratado</label>
+                        <input type="number" step="any" name="monto_contratado" value="<?= htmlspecialchars($obra['monto_contratado']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de adjudicación</label>
+                        <input type="text" name="tipo_adjudicacion" value="<?= htmlspecialchars($obra['tipo_adjudicacion']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Anticipo</label>
+                        <input type="number" step="any" name="anticipo" value="<?= htmlspecialchars($obra['anticipo']) ?>">
+                    </div>
+                </div>
+
+                <h3>Fechas de contratación</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Fecha de firma</label>
+                        <input type="date" name="fecha_firma" value="<?= htmlspecialchars($obra['fecha_firma']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de inicio</label>
+                        <input type="date" name="fecha_inicio_contrato" value="<?= htmlspecialchars($obra['fecha_inicio_contrato']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de cierre</label>
+                        <input type="date" name="fecha_cierre" value="<?= htmlspecialchars($obra['fecha_cierre']) ?>">
+                    </div>
+                </div>
+
+                <h3>Datos de convenios de la obra</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Ampliación del monto</label>
+                        <input type="number" step="any" name="ampliacion_monto" value="<?= htmlspecialchars($obra['ampliacion_monto']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Reducción de monto</label>
+                        <input type="number" step="any" name="reduccion_monto" value="<?= htmlspecialchars($obra['reduccion_monto']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Ampliación de plazo</label>
+                        <input type="text" name="ampliacion_plazo" value="<?= htmlspecialchars($obra['ampliacion_plazo']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Reducción de plazo</label>
+                        <input type="text" name="reduccion_plazo" value="<?= htmlspecialchars($obra['reduccion_plazo']) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Diferimiento del periodo contractual</label>
+                        <input type="text" name="diferimiento_periodo" value="<?= htmlspecialchars($obra['diferimiento_periodo']) ?>">
+                    </div>
+                </div>
+
+                <h3>Supervisor Externo</h3>
+                <div class="form-group">
+                    <label>Nombre del supervisor</label>
+                    <input type="text" name="nombre_supervisor" value="<?= htmlspecialchars($obra['nombre_supervisor']) ?>" required>
+                </div>
 
                 <button type="submit" class="btn">Guardar Cambios</button>
             </form>
         </div>
     </div>
 </body>
+
+<script>
+    function calcularEstimacion(input) {
+        const row = input.closest('tr');
+        const monto = parseFloat(input.value) || 0;
+
+        const cincoMillar = (monto / 1.16) * 0.005;
+        const amortAnt = monto * 0.3;
+        const liqPagar = monto - cincoMillar - amortAnt;
+
+        row.querySelector('input[name="estimacion_cinco_millar[]"]').value = cincoMillar.toFixed(2);
+        row.querySelector('input[name="estimacion_amortizacion_anticipo[]"]').value = amortAnt.toFixed(2);
+        row.querySelector('input[name="estimacion_liquidacion_pagar[]"]').value = liqPagar.toFixed(2);
+    }
+
+    function agregarFilaEstimacion() {
+        const tbody = document.getElementById('estimaciones_body');
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <input type="hidden" name="estimacion_id[]" value="">
+            <td><input type="text" name="estimacion_numero[]"></td>
+            <td><input type="date" name="estimacion_del[]"></td>
+            <td><input type="date" name="estimacion_al[]"></td>
+            <td><input type="number" step="0.01" name="estimacion_monto[]" oninput="calcularEstimacion(this)"></td>
+            <td><input type="text" name="estimacion_cinco_millar[]" readonly></td>
+            <td><input type="text" name="estimacion_amortizacion_anticipo[]" readonly></td>
+            <td><input type="text" name="estimacion_liquidacion_pagar[]" readonly></td>
+            <td><input type="checkbox" disabled></td>
+
+        `;
+
+        tbody.appendChild(row);
+    }
+</script>
+
 
 </html>

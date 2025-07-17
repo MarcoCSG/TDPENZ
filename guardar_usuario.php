@@ -28,7 +28,7 @@ if ($stmt->fetch()) {
 // Insertar usuario
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 $stmt = $conn->prepare("INSERT INTO usuarios (nombre, correo, password, tipo_usuario_id) VALUES (?, ?, ?, ?)");
-$stmt->execute([$nombre, $correo, $hashed_password, $rol]);
+$stmt->execute([$nombre, $correo, $hashed_password, $tipo_usuario_id]);
 $usuario_id = $conn->lastInsertId();
 
 // Asignar municipios
@@ -39,4 +39,3 @@ foreach ($municipios as $m_id) {
 
 header("Location: registro_exitoso.php");
 exit;
-

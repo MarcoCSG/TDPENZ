@@ -13,8 +13,10 @@
 <body>
     <div class="main-container">
         <header class="app-header">
-            <img src="assets/img/logo.png" class="app-logo" alt="Logo empresa">
-            <h1>Registro de Obras</h1>
+            <a href="menu.php">
+                <img src="assets/img/logo.png" class="app-logo" alt="Logo empresa">
+            </a>
+            <h1 class="page-title">Editar Obra</h1>
         </header>
 
         <?php if (isset($_GET['registro'])): ?>

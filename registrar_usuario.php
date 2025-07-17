@@ -26,11 +26,16 @@ $municipios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Registrar Usuario</title>
     <!-- <link rel="stylesheet" href="assets/css/style.css"> -->
-        <link rel="stylesheet" href="assets/css/registrar_usuarios.css">
+    <link rel="stylesheet" href="assets/css/registrar_usuarios.css">
+    <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
+
+    <meta charset="UTF-8">
 </head>
+
 <body>
     <div class="menu-container">
         <img src="assets/img/logo.png" class="logo" alt="Logo">
@@ -43,8 +48,9 @@ $municipios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <label for="tipo_usuario_id">Tipo de usuario:</label>
             <select name="tipo_usuario_id" id="tipo_usuario_id" required>
-                <option value="admin">Administrador</option>
-                <option value="supervisor">Supervisor</option>
+                <option value="1">Administrador</option>
+                <option value="2">Supervisor</option>
+
             </select>
 
             <label>Municipios asignados:</label>
@@ -61,4 +67,5 @@ $municipios = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </form>
     </div>
 </body>
+
 </html>
