@@ -32,7 +32,7 @@ $stmt = $conn->prepare("SELECT nombre FROM municipios WHERE id = :id");
 $stmt->execute(['id' => $municipio_id]);
 $municipio = $stmt->fetchColumn();
 
-$tipo = ucfirst(strtolower($estimacion['tipo'] ?? 'NORMAL'));
+$tipo = ucfirst(strtolower($estimacion['tipo'] ?? ''));
 $numero_estimacion = htmlspecialchars($estimacion['numero_estimacion']);
 
 // === CLASE PDF PERSONALIZADA ===
@@ -96,7 +96,7 @@ class MYPDF extends TCPDF
                 <td colspan="5">' . htmlspecialchars($obra['descripcion']) . '</td>
             </tr>
             <tr class="header-bg">
-                <td colspan="6" align="center"><b>Estimación: ' . $numero_estimacion . ' (' . $tipo . ')</b></td>
+                <td colspan="6" align="center"><b>Estimación: ' . $numero_estimacion . '' . $tipo . '</b></td>
             </tr>
         </table>';
         $this->writeHTML($html, true, false, true, false, '');
@@ -124,10 +124,12 @@ $imageHeight = 90;
 $gap = 5; // separación horizontal entre imágenes
 $padding = 4;
 $rowHeight = $imageHeight + 10; // imagen + descripción + margen
-$currentImageIndex = 0;
+$currentImageIndex = 10;
 
 // Posición inicial
 $startY = $pdf->GetY();
+
+$imageInnerPadding = 2; // margen interno para que la imagen no esté pegada al borde
 
 foreach ($imagenes as $index => $img) {
     // Si es inicio de nueva fila (2 imágenes por fila)
@@ -138,7 +140,7 @@ foreach ($imagenes as $index => $img) {
 
         if ($rowTopY + $rowHeight > $pdf->getPageHeight() - 25) {
             $pdf->AddPage();
-            $pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo); 
+            $pdf->renderHeaderTable($obra, $municipio, $numero_estimacion, $tipo);
             $rowTopY = $pdf->GetY();
         }
 
@@ -147,7 +149,9 @@ foreach ($imagenes as $index => $img) {
     }
 
     // Calcular posición X
-    $x = ($currentImageIndex % 2 == 0) ? $x1 : $x2;
+    $isLeftImage = $currentImageIndex % 2 == 0;
+    $x = $isLeftImage ? ($x1 + $imageInnerPadding) : $x2;
+
 
     // Dibujar imagen
     $imageTempPath = downloadImageFromS3($img['ruta']);
@@ -204,4 +208,3 @@ function downloadImageFromS3($url)
         return false;
     }
 }
-

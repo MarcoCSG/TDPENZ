@@ -158,7 +158,7 @@ $modo_actualizacion = $dictamen ? true : false;
 
                 <div class="button-group">
                     <button type="submit" class="btn-primary"><?= $modo_actualizacion ? 'Actualizar Dictamen' : 'Guardar Dictamen' ?></button>
-                    <a href="secciones/generar_dictamen_pdf.php?obra_id=<?= $obra['id'] ?>&estimacion_id=<?= $estimacion['id'] ?>" class="btn btn-secondary">Generar PDF</a>
+                    <a href="secciones/generar_dictamen_pdf.php?obra_id=<?= $obra['id'] ?>&estimacion_id=<?= $estimacion['id'] ?>" class="btn btn-secondary" target="_blank">Generar PDF</a>
                 </div>
             </form>
         </div>

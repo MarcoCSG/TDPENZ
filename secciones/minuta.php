@@ -164,7 +164,7 @@ if (!$minuta) $minuta = [];
 
             <div class="button-group">
                 <button type="submit" class="btn-primary"><?= $minuta ? 'Actualizar' : 'Guardar' ?> Minuta</button>
-                <a href="secciones/generar_pdf_minuta.php?obra_id=<?= $obra['id'] ?>&estimacion_id=<?= $estimacion_seleccionada['id'] ?>" class="btn btn-secondary">Generar PDF</a>
+                <a href="secciones/generar_pdf_minuta.php?obra_id=<?= $obra['id'] ?>&estimacion_id=<?= $estimacion_seleccionada['id'] ?>" class="btn btn-secondary" target="_blank">Generar PDF</a>
             </div>
         </form>
     </div>

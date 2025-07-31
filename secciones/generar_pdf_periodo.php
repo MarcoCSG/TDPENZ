@@ -131,10 +131,12 @@ $imageHeight = 90;
 $gap = 5; // separación horizontal entre imágenes
 $padding = 4;
 $rowHeight = $imageHeight + 10; // imagen + descripción + margen
-$currentImageIndex = 0;
+$currentImageIndex = 10;
 
 // Posición inicial
 $startY = $pdf->GetY();
+
+$imageInnerPadding = 2; // margen interno para que la imagen no esté pegada al borde
 
 foreach ($imagenes as $index => $img) {
     // Si es inicio de nueva fila (2 imágenes por fila)
@@ -155,7 +157,8 @@ foreach ($imagenes as $index => $img) {
     }
 
     // Calcular posición X
-    $x = ($currentImageIndex % 2 == 0) ? $x1 : $x2;
+    $isLeftImage = $currentImageIndex % 2 == 0;
+    $x = $isLeftImage ? ($x1 + $imageInnerPadding) : $x2;
 
     // Dibujar imagen
     $imageTempPath = downloadImageFromS3($img['ruta']);

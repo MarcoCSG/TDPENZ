@@ -51,7 +51,7 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
 
             <label for="anio">Año:</label>
             <select name="anio" id="anio" required>
-                <?php for ($a = 2022; $a <= 2025; $a++): ?>
+                <?php for ($a = 2025; $a <= 2029; $a++): ?>
                     <option value="<?= $a ?>"><?= $a ?></option>
                 <?php endfor; ?>
             </select>

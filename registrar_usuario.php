@@ -38,7 +38,9 @@ $municipios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body>
     <div class="menu-container">
-        <img src="assets/img/logo.png" class="logo" alt="Logo">
+        <a href="menu.php">
+            <img src="assets/img/logo.png" class="logo" alt="Logo empresa">
+        </a>
         <h1>Registrar Nuevo Usuario</h1>
 
         <form action="guardar_usuario.php" method="POST">

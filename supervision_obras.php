@@ -18,13 +18,21 @@ $obras = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
     <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <title>Supervisión de Obras</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
     <div class="form-container">
+        <div class="logo-menu">
+            <a href="menu.php">
+                <img src="assets/img/logo.png" alt="Logo empresa">
+            </a>
+        </div>
+
         <h2>Selecciona una obra</h2>
 
         <form action="dashboard_obra.php" method="POST">
@@ -42,4 +50,5 @@ $obras = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </form>
     </div>
 </body>
+
 </html>

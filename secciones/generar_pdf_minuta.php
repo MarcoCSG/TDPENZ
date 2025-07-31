@@ -50,7 +50,7 @@ class MYPDF extends TCPDF
         $this->SetFont('helvetica', '', 10);
         // Primera línea: Estimación y Obra
         $this->Cell(0, 5, 
-            'ESTIMACIÓN: ' . $this->obra['estimacion'] . '    OBRA: ' . $this->obra['nombre'], 
+            'MINUTA: MIN/' . $this->obra['nombre'] .'/' .  $this->obra['estimacion'], 
             0, 1, 'R'
         );
         // Segunda línea: Fecha
@@ -104,16 +104,22 @@ $html = '
 <br>
 
 <table class="tabla">
-    <tr><td class="rojo">Avance físico general:</td><td>' . $minuta['avance_fisico'] . '</td></tr>
-    <tr><td class="rojo">Avance financiero general:</td><td>' . $minuta['avance_financiero'] . '</td></tr>
-    <tr><td class="rojo">Número de conceptos que forman parte de los alcances del contrato:</td><td>' . $minuta['conceptos_contrato'] . '</td></tr>
-    <tr><td class="rojo">Número de conceptos ejecutados a la fecha:</td><td>' . $minuta['conceptos_ejecutados'] . '</td></tr>
-    <tr><td class="rojo">Partidas ejecutadas:</td><td>' . htmlspecialchars($minuta['partidas_ejecutadas']) . '</td></tr>
-    <tr><td class="rojo">Número de conceptos por ejecutar:</td><td>' . $minuta['conceptos_por_ejecutar'] . '</td></tr>
-    <tr><td class="rojo">Partidas por ejecutar:</td><td>' . htmlspecialchars($minuta['partidas_por_ejecutar']) . '</td></tr>
-    <tr><td class="rojo">Días transcurridos desde el inicio de los trabajos:</td><td>' . $minuta['dias_transcurridos'] . '</td></tr>
-    <tr><td class="rojo">Número de conceptos extraordinarios solicitados y autorizados:</td><td>' . $minuta['conceptos_extraordinarios'] . '</td></tr>
-    <tr><td class="rojo">Ampliación o reducción en días naturales solicitados y autorizados:</td><td>' . $minuta['dias_ampliacion'] . '</td></tr>
+<tr>
+    <td class="rojo">Avance físico general:</td>
+    <td style="text-align:center;">' . $minuta['avance_fisico'] . '%</td>
+</tr>
+<tr>
+    <td class="rojo">Avance financiero general:</td>
+    <td style="text-align:center;">' . $minuta['avance_financiero'] . '%</td>
+</tr>
+    <tr><td class="rojo">Número de conceptos que forman parte de los alcances del contrato:</td><td style="text-align:center;">' . $minuta['conceptos_contrato'] . '</td></tr>
+    <tr><td class="rojo">Número de conceptos ejecutados a la fecha:</td><td style="text-align:center;">' . $minuta['conceptos_ejecutados'] . '</td></tr>
+    <tr><td class="rojo">Partidas ejecutadas:</td><td style="text-align:center;">' . htmlspecialchars($minuta['partidas_ejecutadas']) . '</td></tr>
+    <tr><td class="rojo">Número de conceptos por ejecutar:</td><td style="text-align:center;">' . $minuta['conceptos_por_ejecutar'] . '</td></tr>
+    <tr><td class="rojo">Partidas por ejecutar:</td><td style="text-align:center;">' . htmlspecialchars($minuta['partidas_por_ejecutar']) . '</td></tr>
+    <tr><td class="rojo">Días transcurridos desde el inicio de los trabajos:</td><td style="text-align:center;">' . $minuta['dias_transcurridos'] . '</td></tr>
+    <tr><td class="rojo">Número de conceptos extraordinarios solicitados y autorizados:</td><td style="text-align:center;">' . $minuta['conceptos_extraordinarios'] . '</td></tr>
+    <tr><td class="rojo">Ampliación o reducción en días naturales solicitados y autorizados:</td><td style="text-align:center;">' . $minuta['dias_ampliacion'] . '</td></tr>
 </table>
 ';
 

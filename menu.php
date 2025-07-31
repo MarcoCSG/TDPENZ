@@ -19,11 +19,13 @@ $municipio = $stmt->fetchColumn();
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Menú principal</title>
     <link rel="icon" href="assets/img/logo_redondo.png" type="image/x-icon">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
     <div class="menu-container">
         <img src="assets/img/logo.png" class="logo" alt="Logo empresa">
@@ -49,6 +51,14 @@ $municipio = $stmt->fetchColumn();
                 Altas de obras
             </a>
         </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="logout.php" class="menu-button" style="background-color: #d9534f; color: white;">
+                <img src="assets/img/cerrar-sesion.png" alt="Cerrar sesión" style="width: 30px; height: 30px; vertical-align: middle;">
+                Cerrar sesión
+            </a>
+        </div>
+
     </div>
 </body>
+
 </html>

@@ -21,6 +21,13 @@ $stmt = $conn->prepare("SELECT * FROM estimaciones WHERE id = ?");
 $stmt->execute([$estimacion_id]);
 $estimacion = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Obtener cédula si existe (para deducciones)
+$stmt = $conn->prepare("SELECT importe_retenciones FROM cedulas_estatus WHERE obra_id = ? AND estimacion_id = ?");
+$stmt->execute([$obra_id, $estimacion_id]);
+$cedula = $stmt->fetch(PDO::FETCH_ASSOC);
+$total_deducciones = isset($cedula['importe_retenciones']) ? (float)$cedula['importe_retenciones'] : 0;
+
+
 // Obtener dictamen de procedencia
 $stmt = $conn->prepare("SELECT * FROM dictamenes_procedencia WHERE obra_id = ? AND estimacion_id = ?");
 $stmt->execute([$obra_id, $estimacion_id]);
@@ -91,6 +98,7 @@ $amortizacion = number_format((float)$estimacion['amortizacion_anticipo'], 2);
 $cinco_millar = number_format((float)$estimacion['cinco_millar'], 2);
 $liquido_pagar = number_format((float)$estimacion['liquidacion_pagar'], 2);
 $estatus = strtoupper($dictamen['estatus']);
+$deducciones = number_format($total_deducciones, 2);
 
 // === Generar HTML ===
 $html = '
@@ -141,7 +149,7 @@ En base al artículo 112 fracción X, 118 VII y 111 del Reglamento de la Ley de 
     <tr><td class="rojo">Monto S/ I.V.A.:</td><td>$' . $monto_siniva . '</td></tr>
     <tr><td class="rojo">Amortización de anticipo:</td><td>$' . $amortizacion . '</td></tr>
     <tr><td class="rojo">Retención 5 al millar:</td><td>$' . $cinco_millar . '</td></tr>
-    <tr><td class="rojo">Total de deducciones:</td><td>$0.00</td></tr>
+    <tr><td class="rojo">Total de deducciones:</td><td>$' . $deducciones . '</td></tr>
     <tr><td class="rojo">Líquido a pagar:</td><td>$' . $liquido_pagar . '</td></tr>
     <tr><td class="rojo">ESTATUS:</td><td class="verde">' . $estatus . '</td></tr>
 </table>

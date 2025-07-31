@@ -34,7 +34,7 @@
             <form method="POST">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="nombre">Nombre de la obra</label>
+                        <label for="nombre">Número de obra</label>
                         <input type="text" id="nombre" name="nombre" required>
                     </div>
 
@@ -97,10 +97,15 @@
                         </div>
                         <div class="form-group">
                             <label for="tipo_adjudicacion">Tipo de adjudicación</label>
-                            <input type="text" id="tipo_adjudicacion" name="tipo_adjudicacion">
+                            <select id="tipo_adjudicacion" name="tipo_adjudicacion" class="form-control">
+                                <option value="Licitación pública">1.- Licitación pública</option>
+                                <option value="Invitación a cuando menos tres personas">2.- Invitación a cuando menos tres personas</option>
+                                <option value="Adjudicación directa">3.- Adjudicación directa</option>
+                            </select>
                         </div>
+
                         <div class="form-group">
-                            <label for="anticipo">Anticipo</label>
+                            <label for="anticipo">Monto de anticipo</label>
                             <input type="number" id="anticipo" name="anticipo" step="any">
                         </div>
                     </div>
@@ -224,9 +229,9 @@
                         <input type="text" id="nombre_supervisor" name="nombre_supervisor" required>
                     </div>
 
-                <div class="form-group" style="margin-top: 25px;">
-                    <button type="submit" class="btn">Registrar Obra</button>
-                </div>
+                    <div class="form-group" style="margin-top: 25px;">
+                        <button type="submit" class="btn">Registrar Obra</button>
+                    </div>
             </form>
         </div>
 

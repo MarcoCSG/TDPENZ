@@ -20,6 +20,11 @@ body {
     box-sizing: border-box;
     flex-shrink: 0;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    height: 100vh;               /* Altura de la ventana */
+    overflow-y: auto;            /* Scroll vertical cuando sea necesario */
+    overflow-x: hidden;          /* Evita scroll horizontal */
+    position: sticky;            /* Se mantiene fija al hacer scroll */
+    top: 0;
 }
 
 .sidebar h2 {
