@@ -1,3 +1,4 @@
 .env
 /vendor/
 test_aws.php
+includes/db.php

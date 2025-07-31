@@ -2,7 +2,17 @@
 session_start();
 include 'includes/db.php';
 
-if (!isset($_SESSION['usuario_id']) || $_SESSION['rol'] != 'admin') {
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+// Verificar si el usuario es administrador
+$stmt = $conn->prepare("SELECT tipo_usuario_id FROM usuarios WHERE id = ?");
+$stmt->execute([$_SESSION['usuario_id']]);
+$tipo_usuario_id = $stmt->fetchColumn();
+
+if ($tipo_usuario_id != 1) {
     header("Location: index.php");
     exit;
 }
