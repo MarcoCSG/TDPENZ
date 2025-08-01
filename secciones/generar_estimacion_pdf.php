@@ -1,6 +1,6 @@
 <?php
 require_once('../tcpdf/tcpdf.php');
-require('../includes/db.php');
+require_once('../includes/db.php');
 
 // Verificar que vengan ambos parámetros
 if (!isset($_GET['id']) || !isset($_GET['id_estimacion'])) {
@@ -22,8 +22,6 @@ $stmtEst = $conn->prepare("SELECT * FROM estimaciones WHERE obra_id = ? AND id =
 $stmtEst->execute([$id_obra, $id_estimacion]);
 $estimacion = $stmtEst->fetch(PDO::FETCH_ASSOC);
 if (!$estimacion) die("Estimación no encontrada.");
-
-
 
 // PDF personalizado
 class CustomPDF extends TCPDF {
@@ -97,6 +95,20 @@ function rowFechasContrato($pdf, $label, $firma, $inicio, $termino) {
     $pdf->Cell(46.66, 6, $termino, 1, 1, 'C');
 }
 
+// Función para formatear valores monetarios con manejo de nulos
+function formatMoneyValue($value) {
+    if ($value === null || $value === '' || strtoupper($value) === 'NA') {
+        return 'N/A';
+    }
+    
+    // Verificar si el valor es numérico
+    if (is_numeric($value)) {
+        return '$' . number_format(floatval($value), 2);
+    }
+    
+    return $value; // Si no es numérico, devolver el valor original
+}
+
 // === Sección 1: Datos Generales ===
 sectionHeader($pdf, 'DATOS GENERALES DE LA OBRA');
 rowCenter($pdf, 'ENTE FISCALIZABLE:', $obra['municipio']);
@@ -111,19 +123,19 @@ rowGeorreferencia($pdf, 'GEOREFERENCIA:', $obra['latitud'], $obra['longitud']);
 sectionHeader($pdf, 'DATOS DE CONTRATACIÓN');
 rowCenter($pdf, 'CONTRATISTA:', $obra['contratista']);
 rowCenter($pdf, 'NÚMERO DE CONTRATO:', $obra['numero_contrato']);
-rowCenter($pdf, 'MONTO CONTRATADO:', '$'.number_format($obra['monto_contratado'], 2));
-rowCenter($pdf, 'ANTICIPO:', '$'.number_format($obra['anticipo'], 2));
-rowCenter($pdf, '% DE ANTICIPO:', $obra['porcentaje_anticipo'].'%');
+rowCenter($pdf, 'MONTO CONTRATADO:', formatMoneyValue($obra['monto_contratado']));
+rowCenter($pdf, 'ANTICIPO:', formatMoneyValue($obra['anticipo']));
+rowCenter($pdf, '% DE ANTICIPO:', ($obra['porcentaje_anticipo'] !== null && is_numeric($obra['porcentaje_anticipo'])) ? $obra['porcentaje_anticipo'].'%' : 'N/A');
 rowCenter($pdf, 'TIPO DE ADJUDICACIÓN:', $obra['tipo_adjudicacion']);
 rowFechasContrato($pdf, 'FECHAS DE CONTRATO:', $obra['fecha_firma'], $obra['fecha_inicio_contrato'], $obra['fecha_cierre']);
 
 // === Sección 3: Convenios ===
 sectionHeader($pdf, 'DATOS DE CONVENIOS');
-rowCenter($pdf, 'AMPLIACIÓN DE MONTO:', '$'.number_format($obra['ampliacion_monto'], 2));
-rowCenter($pdf, 'AMPLIACIÓN DE PLAZO:', '$'.number_format($obra['ampliacion_plazo'], 2));
-rowCenter($pdf, 'REDUCCIÓN DE MONTO:', '$'.number_format($obra['reduccion_monto'], 2));
-rowCenter($pdf, 'REDUCCIÓN DE PLAZO:', '$'.number_format($obra['reduccion_plazo'], 2));
-rowCenter($pdf, 'DIFERIMIENTO DE PERIODO CONTRACTUAL:', '$'.number_format($obra['diferimiento_periodo'], 2));
+rowCenter($pdf, 'AMPLIACIÓN DE MONTO:', formatMoneyValue($obra['ampliacion_monto']));
+rowCenter($pdf, 'AMPLIACIÓN DE PLAZO:', formatMoneyValue($obra['ampliacion_plazo']));
+rowCenter($pdf, 'REDUCCIÓN DE MONTO:', formatMoneyValue($obra['reduccion_monto']));
+rowCenter($pdf, 'REDUCCIÓN DE PLAZO:', formatMoneyValue($obra['reduccion_plazo']));
+rowCenter($pdf, 'DIFERIMIENTO DE PERIODO CONTRACTUAL:', formatMoneyValue($obra['diferimiento_periodo']));
 
 // === Sección 4: Estimaciones ===
 sectionHeader($pdf, 'DATOS DE ESTIMACIÓN');
@@ -141,10 +153,10 @@ $pdf->SetFont('helvetica', '', 7);
 $pdf->Cell(30, 6, $estimacion['numero_estimacion'], 1);
 $pdf->Cell(20, 6, $estimacion['fecha_del'], 1);
 $pdf->Cell(20, 6, $estimacion['fecha_al'], 1);
-$pdf->Cell(25, 6, '$'.number_format($estimacion['monto_civa'], 2), 1);
-$pdf->Cell(25, 6, '$'.number_format($estimacion['cinco_millar'], 2), 1);
-$pdf->Cell(25, 6, '$'.number_format($estimacion['amortizacion_anticipo'], 2), 1);
-$pdf->Cell(35, 6, '$'.number_format($estimacion['liquidacion_pagar'], 2), 1);
+$pdf->Cell(25, 6, formatMoneyValue($estimacion['monto_civa']), 1);
+$pdf->Cell(25, 6, formatMoneyValue($estimacion['cinco_millar']), 1);
+$pdf->Cell(25, 6, formatMoneyValue($estimacion['amortizacion_anticipo']), 1);
+$pdf->Cell(35, 6, formatMoneyValue($estimacion['liquidacion_pagar']), 1);
 $pdf->Ln();
 
 // === Firma ===
