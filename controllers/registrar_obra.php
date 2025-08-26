@@ -1,11 +1,11 @@
 <?php
-session_start();
-include_once __DIR__ . '/../includes/db.php';
-
+// Verificar si usuario está logueado y tiene las variables de sesión necesarias
 if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
-    header("Location: index.php");
+    header("Location: ../index.php");
     exit;
 }
+
+include_once __DIR__ . '/../includes/db.php';
 
 $municipio_id = $_SESSION['municipio_id'];
 $anio = $_SESSION['anio'];

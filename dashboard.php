@@ -53,7 +53,7 @@ $municipios = $query->fetchAll(PDO::FETCH_ASSOC);
             <select name="anio" id="anio" required>
                 <?php for ($a = 2025; $a <= 2029; $a++): ?>
                     <option value="<?= $a ?>"><?= $a ?></option>
-                <?php endfor; ?>
+                <?php endfor; ?> 
             </select>
 
             <button type="submit">Continuar</button>

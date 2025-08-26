@@ -1,4 +1,13 @@
-<?php require_once __DIR__ . '/controllers/registrar_obra.php'; ?>
+<?php
+session_start();
+if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
+    header("Location: index.php");
+    exit;
+}
+
+require_once __DIR__ . '/controllers/registrar_obra.php';
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 

@@ -2,8 +2,8 @@
 session_start();
 include 'includes/db.php';
 
-// Verificar si usuario está logueado y es administrador
-if (!isset($_SESSION['usuario_id'])) {
+// Verificar si usuario está logueado y tiene las variables de sesión necesarias
+if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
     header("Location: index.php");
     exit;
 }
