@@ -200,9 +200,9 @@ require_once __DIR__ . '/controllers/registrar_obra.php';
     <td><input type="date" name="estimacion_del[]" class="form-control" /></td>
     <td><input type="date" name="estimacion_al[]" class="form-control" /></td>
     <td><input type="number" step="0.01" name="estimacion_monto[]" class="form-control" oninput="calcularEstimacion(this)" /></td>
-    <td><input type="text" name="estimacion_cinco_millar[]" class="form-control" readonly /></td>
-    <td><input type="text" name="estimacion_amortizacion_anticipo[]" class="form-control" readonly /></td>
-    <td><input type="text" name="estimacion_liquidacion_pagar[]" class="form-control" readonly /></td>
+    <td><input type="text" name="estimacion_cinco_millar[]" class="form-control"  /></td>
+    <td><input type="text" name="estimacion_amortizacion_anticipo[]" class="form-control"  /></td>
+    <td><input type="text" name="estimacion_liquidacion_pagar[]" class="form-control"  /></td>
 `;
 
 
