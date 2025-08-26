@@ -2,18 +2,19 @@
 session_start();
 include 'includes/db.php';
 
-// Verificar si usuario está logueado y tiene las variables de sesión necesarias
-if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
+// Verificar si usuario está logueado
+if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// Verificar que sea administrador
+// Verificar que sea administrador o supervisor
 $stmt = $conn->prepare("SELECT tipo_usuario_id FROM usuarios WHERE id = ?");
 $stmt->execute([$_SESSION['usuario_id']]);
 $tipo_usuario_id = $stmt->fetchColumn();
 
-if ($tipo_usuario_id != 1) {
+// Permitir acceso si es administrador (1) o supervisor (2)
+if ($tipo_usuario_id != 1 && $tipo_usuario_id != 2) {
     header("Location: index.php");
     exit;
 }

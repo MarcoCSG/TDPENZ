@@ -3,24 +3,28 @@ session_start();
 include 'includes/db.php';
 
 // Verificar si usuario está logueado y tiene las variables de sesión necesarias
-if (!isset($_SESSION['usuario_id'], $_SESSION['municipio_id'], $_SESSION['anio'])) {
+if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// Obtener el tipo de usuario desde la base de datos
+// Verificar que sea administrador o supervisor
 $stmt = $conn->prepare("SELECT tipo_usuario_id FROM usuarios WHERE id = ?");
 $stmt->execute([$_SESSION['usuario_id']]);
 $tipo_usuario_id = $stmt->fetchColumn();
 
-// Solo permitir acceso si es administrador (tipo_usuario_id = 1)
-if ($tipo_usuario_id != 1) {
+// Permitir acceso si es administrador (1) o supervisor (2)
+if ($tipo_usuario_id != 1 && $tipo_usuario_id != 2) {
     header("Location: index.php");
     exit;
 }
 
+// Obtener ID de la obra
 $id = $_GET['id'] ?? null;
-if (!$id) die("ID no válido.");
+if (!$id) {
+    header("Location: registrar_obra.php");
+    exit;
+}
 
 // Obtener obra
 $stmt = $conn->prepare("SELECT * FROM obras WHERE id = ?");
