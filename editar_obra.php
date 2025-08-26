@@ -272,9 +272,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <td><input type="date" name="estimacion_del[]" value="<?= $e['fecha_del'] ?>"></td>
                                     <td><input type="date" name="estimacion_al[]" value="<?= $e['fecha_al'] ?>"></td>
                                     <td><input type="number" step="0.01" name="estimacion_monto[]" value="<?= htmlspecialchars($e['monto_civa']) ?>" oninput="calcularEstimacion(this)"></td>
-                                    <td><input type="text" name="estimacion_cinco_millar[]" value="<?= $e['cinco_millar'] ?>" readonly></td>
-                                    <td><input type="text" name="estimacion_amortizacion_anticipo[]" value="<?= $e['amortizacion_anticipo'] ?>" readonly></td>
-                                    <td><input type="text" name="estimacion_liquidacion_pagar[]" value="<?= $e['liquidacion_pagar'] ?>" readonly></td>
+                                    <td><input type="text" name="estimacion_cinco_millar[]" value="<?= $e['cinco_millar'] ?>" ></td>
+                                    <td><input type="text" name="estimacion_amortizacion_anticipo[]" value="<?= $e['amortizacion_anticipo'] ?>" ></td>
+                                    <td><input type="text" name="estimacion_liquidacion_pagar[]" value="<?= $e['liquidacion_pagar'] ?>" ></td>
                                     <td><input type="checkbox" name="eliminar_estimacion[]" value="<?= $e['id'] ?>"></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -389,9 +389,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <td><input type="date" name="estimacion_del[]"></td>
             <td><input type="date" name="estimacion_al[]"></td>
             <td><input type="number" step="0.01" name="estimacion_monto[]" oninput="calcularEstimacion(this)"></td>
-            <td><input type="text" name="estimacion_cinco_millar[]" readonly></td>
-            <td><input type="text" name="estimacion_amortizacion_anticipo[]" readonly></td>
-            <td><input type="text" name="estimacion_liquidacion_pagar[]" readonly></td>
+            <td><input type="text" name="estimacion_cinco_millar[]" ></td>
+            <td><input type="text" name="estimacion_amortizacion_anticipo[]" ></td>
+            <td><input type="text" name="estimacion_liquidacion_pagar[]" ></td>
             <td><input type="checkbox" disabled></td>
 
         `;
