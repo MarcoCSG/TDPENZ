@@ -61,6 +61,13 @@ $municipio = $stmt->fetchColumn();
                 </a>
             <?php endif; ?>
 
+            <?php if (isset($_SESSION['tipo_usuario_id']) && $_SESSION['tipo_usuario_id'] == 1): ?>
+                <a href="registrar_usuario.php" class="menu-button">
+                    <img src="assets/img/actualizar.png" alt="registro">
+                    Cambiar de municipo y año
+                </a>
+            <?php endif; ?>
+
 
             <a href="registrar_obra.php" class="menu-button">
                 <img src="assets/img/configuraciones.png" alt="obras">

@@ -47,9 +47,9 @@ function sectionHeader($pdf, $text) {
 
 function rowCenter($pdf, $label, $value) {
     $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->MultiCell(60, 6, $label, 1, 'C', false, 0);
+    $pdf->MultiCell(90, 6, $label, 1, 'C', false, 0); // antes 60 → ahora 90
     $pdf->SetFont('helvetica', '', 8);
-    $pdf->MultiCell(120, 6, $value, 1, 'C', false, 1);
+    $pdf->MultiCell(90, 6, $value, 1, 'C', false, 1); // antes 120 → ahora 90
 }
 
 function rowDoubleColumn($pdf, $mainLabel, $leftLabel, $leftValue, $rightLabel, $rightValue) {

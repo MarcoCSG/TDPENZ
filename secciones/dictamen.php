@@ -88,7 +88,7 @@ $modo_actualizacion = $dictamen ? true : false;
 
                 <div class="form-group">
                     <label>DESCRIPCIÓN:</label>
-                    <textarea readonly>En base al artículo 112 fracción X, 118 VII y 111 del Reglamento de la Ley de Obras Públicas y Servicios Relacionados Con Ellas del Estado de Veracruz de Ignacio de la Llave, así mismo, en base al análisis, revisión de campo y revisión de gabinete se dictamina lo siguiente:</textarea>
+                    <textarea readonly>Con fundamento en el articulo 112 fracción X, 118 VII y 111 del Reglamento de la Ley de Obras Públicas y Servicios Relacionados Con Ellas del Estado de Veracruz de Ignacio de la Llave, así mismo, en base al análisis, revisión de campo y revisión de gabinete se dictamina lo siguiente:</textarea>
                 </div>
 
                 <div class="form-group">
